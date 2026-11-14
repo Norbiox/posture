@@ -29,26 +29,21 @@
   const D = PX; // px per cm, for readable geometry below
   const hatch = Array.from({ length: 57 }, (_, i) => 24 + i * 10);
 
-  // Push labels of close Presets and the threshold apart; a leader ties each label to its true level.
+  // Push labels of close Presets apart; a leader ties each label to its true level.
   const MIN_GAP = 32;
-  const labels = $derived.by(() => {
-    const rows: { preset: Preset | null; cm: number }[] = presets.map((p) => ({
-      preset: p,
-      cm: p.height_cm,
-    }));
-    if (threshold !== null) rows.push({ preset: null, cm: threshold });
-    rows.sort((a, b) => b.cm - a.cm);
+  const markers = $derived.by(() => {
     let last = -Infinity;
-    return rows.map((r) => {
-      const line = y(r.cm);
-      const label = Math.max(line, last + MIN_GAP);
-      last = label;
-      const current = height !== null && Math.abs(height - r.cm) < 0.5;
-      return { ...r, line, label, current };
-    });
+    return presets
+      .toSorted((a, b) => b.height_cm - a.height_cm)
+      .map((preset) => {
+        const line = y(preset.height_cm);
+        const label = Math.max(line, last + MIN_GAP);
+        last = label;
+        const current = height !== null && Math.abs(height - preset.height_cm) < 0.5;
+        return { preset, line, label, current };
+      });
   });
-  const markers = $derived(labels.flatMap((l) => (l.preset ? [{ ...l, preset: l.preset }] : [])));
-  const thresholdLabel = $derived(labels.find((l) => l.preset === null));
+  let hovered = $state<Preset["id"] | null>(null); // Preset whose label is under the pointer
 
   const ink = $derived(moving ? "var(--color-pencil)" : "var(--color-ink)");
   const hidden = $derived(online ? undefined : "5 4");
@@ -73,14 +68,13 @@
     {#each markers as m (m.preset.id)}
       <!-- Leader: true level at the Desk, bent to the label when labels were pushed apart. -->
       <polyline
-        points="386,{m.line} 398,{m.label} {W - 8},{m.label}"
+        points="372,{m.line} 386,{m.line} 398,{m.label} {W - 8},{m.label}"
         fill="none"
-        stroke={m.current ? "var(--color-ink-2)" : "var(--color-rule)"}
-      />
-      <path
-        d="M398 {m.label} l-6 -9 h12 z"
-        fill={m.current ? "var(--color-ink)" : "var(--color-paper)"}
-        stroke="var(--color-ink)"
+        stroke={hovered === m.preset.id
+          ? "var(--color-ink)"
+          : m.current
+            ? "var(--color-ink-2)"
+            : "var(--color-rule)"}
       />
     {/each}
 
@@ -162,11 +156,10 @@
     </span>
   </div>
 
-  {#if thresholdLabel}
+  {#if threshold !== null}
     <span
       class="pointer-events-none absolute -translate-y-full pb-1 text-xs leading-tight whitespace-nowrap text-ink-2 sm:text-sm"
-      style="left: {pctX(410)}; top: {pctY(thresholdLabel.label)}"
-      >Standing from {thresholdLabel.cm.toFixed(1)}</span
+      style="left: {pctX(16)}; top: {pctY(y(threshold))}">Standing from {threshold.toFixed(1)}</span
     >
   {/if}
 
@@ -179,12 +172,12 @@
       onclick={() => {
         onpreset(m.preset.name);
       }}
+      onmouseenter={() => (hovered = m.preset.id)}
+      onmouseleave={() => (hovered = null)}
       aria-label="Move to Preset {m.preset.name}, {m.preset.height_cm} cm"
     >
       <span class="font-cond font-semibold tabular-nums">+{m.preset.height_cm.toFixed(1)}</span>
-      <span class="underline decoration-rule underline-offset-3 hover:decoration-ink"
-        >{m.preset.name}</span
-      >
+      <span>{m.preset.name}</span>
     </button>
   {/each}
 </div>
