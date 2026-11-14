@@ -9,6 +9,7 @@ from posture.domain.automation import (
     schedule_due,
     should_retry,
     timer_due,
+    timer_due_at,
 )
 from posture.domain.stance import Stance
 from posture.domain.stats import StancePeriod
@@ -104,3 +105,9 @@ def test_missed_schedules_use_the_wall_clock_of_now() -> None:
     now = datetime(2026, 11, 10, 10, 0, tzinfo=warsaw)
     missed = missed_schedules([Schedule(1, time(9, 0))], last_tick, now, lambda _: True)
     assert [due for _, due in missed] == [datetime(2026, 11, 10, 9, 0, tzinfo=warsaw)]
+
+
+def test_timer_due_at() -> None:
+    period = StancePeriod(Stance.STANDING, minutes_ago(20))
+    assert timer_due_at(STANDING_TIMER, NOW, HOURS, period, None) == NOW + timedelta(minutes=40)
+    assert timer_due_at(STANDING_TIMER, NOW, HOURS, period, minutes_ago(10)) is None

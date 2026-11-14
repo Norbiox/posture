@@ -53,6 +53,24 @@ def missed_schedules(
     return missed
 
 
+def timer_due_at(
+    timer: Timer,
+    now: datetime,
+    work_hours: WorkHours,
+    period: StancePeriod | None,
+    last_fired: datetime | None,
+) -> datetime | None:
+    """When the Timer fires in the current Stance period, or None if it will not."""
+    if period is None or period.stance is not timer.stance:
+        return None
+    if last_fired is not None and last_fired >= period.since:
+        return None
+    # Time before Work Hours started today does not count towards the Timer.
+    work_start = datetime.combine(now.date(), work_hours.start, now.tzinfo)
+    anchor = max(period.since, work_start)
+    return anchor.astimezone(UTC) + timedelta(minutes=timer.minutes)
+
+
 def timer_due(
     timer: Timer,
     now: datetime,
@@ -60,14 +78,8 @@ def timer_due(
     period: StancePeriod | None,
     last_fired: datetime | None,
 ) -> bool:
-    if period is None or period.stance is not timer.stance:
-        return False
-    if last_fired is not None and last_fired >= period.since:
-        return False
-    # Time before Work Hours started today does not count towards the Timer.
-    work_start = datetime.combine(now.date(), work_hours.start, now.tzinfo)
-    anchor = max(period.since, work_start)
-    return now.astimezone(UTC) - anchor.astimezone(UTC) >= timedelta(minutes=timer.minutes)
+    due_at = timer_due_at(timer, now, work_hours, period, last_fired)
+    return due_at is not None and now >= due_at
 
 
 def should_retry(

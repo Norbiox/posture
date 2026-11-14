@@ -73,6 +73,7 @@ class Context:
         self.db = Db(config.db_path)
         self.hub = Hub()
         self.desk = DeskController(config.desk_mac, self._record, self._on_change)
+        self.engine = Engine(config, self.db, self.desk)
         # Cached so live Height messages need no database read.
         self.threshold_cm = 90.0
         self.pause_until: datetime | None = None
@@ -265,6 +266,17 @@ class AutomationIn(BaseModel):
 @router.get("/automations")
 async def list_automations(ctx: Ctx) -> list[AutomationRow]:
     return await asyncio.to_thread(ctx.db.list_automations)
+
+
+class TimerDue(BaseModel):
+    id: int
+    due_at: datetime
+
+
+@router.get("/automations/timers")
+async def timer_due_times(ctx: Ctx) -> list[TimerDue]:
+    due = await ctx.engine.timer_due_times()
+    return [TimerDue(id=id_, due_at=due_at) for id_, due_at in due.items()]
 
 
 @router.post("/automations", status_code=201)
@@ -488,10 +500,9 @@ def create_app(config: Config) -> FastAPI:
         ctx.threshold_cm = settings.threshold_cm
         ctx.pause_until = await asyncio.to_thread(ctx.db.get_pause_until)
         desk_task = asyncio.create_task(ctx.desk.run())
-        engine = Engine(config, ctx.db, ctx.desk)
-        await engine.start()
+        await ctx.engine.start()
         yield
-        await engine.stop()
+        await ctx.engine.stop()
         desk_task.cancel()
         await asyncio.wait({desk_task})
 

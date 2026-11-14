@@ -28,6 +28,8 @@
   let settings = $state<SettingsData | null>(null);
   let holidays = $state<Holiday[]>([]);
   let today = $state<DayTotals | null>(null);
+  // Timer id -> when it fires in the current Stance period.
+  let timerDue = $state<Record<number, Date>>({});
   let now = $state(new Date());
 
   const online = $derived(live.connected && socket.open);
@@ -44,8 +46,8 @@
     return settings.workdays.includes(weekday) && !holidays.some((h) => h.date === isoDate(now));
   });
 
-  // ponytail: "Next" is derived client-side from Schedules and Work Hours; add a backend
-  // endpoint if Timer due times or retries need to show exact times.
+  // ponytail: Schedules in "Next" are derived client-side from Work Hours; Timer due times
+  // come from the backend. Retries are not shown.
   const upcoming = $derived.by(() => {
     const s = settings;
     if (!s || !workToday) return [];
@@ -105,6 +107,30 @@
     today = await api<DayTotals>("GET", "/stats/day").catch(() => today);
   }
 
+  async function refreshTimers(): Promise<void> {
+    const due = await api<{ id: number; due_at: string }[]>("GET", "/automations/timers").catch(
+      () => null,
+    );
+    if (!due) return;
+    timerDue = Object.fromEntries(due.map((t) => [t.id, new Date(t.due_at)]));
+    now = new Date(); // a stale clock would add up to a minute to the countdown
+  }
+
+  // The engine ticks once a minute, so whole minutes are as exact as it gets.
+  function countdown(due: Date | undefined): string {
+    if (!due) return "";
+    const minutes = Math.ceil((due.getTime() - now.getTime()) / 60_000);
+    return minutes > 0 ? `in ${String(minutes)} min` : "within 1 min";
+  }
+
+  // A Stance change starts a new period, so every Timer due time moves.
+  let lastStance: string | null | undefined; // undefined: fetch on mount too
+  $effect(() => {
+    if (live.stance === lastStance) return;
+    lastStance = live.stance;
+    void refreshTimers();
+  });
+
   onMount(() => {
     void run(async () => {
       [automations, settings, holidays] = await Promise.all([
@@ -117,6 +143,7 @@
     const timer = setInterval(() => {
       now = new Date();
       void refreshTotals();
+      void refreshTimers();
     }, 60_000);
     return () => {
       clearInterval(timer);
@@ -242,6 +269,9 @@
           <p class="text-sm {live.paused ? 'text-ink-2 line-through' : ''}">
             Timer: after {t.minutes} min {t.stance} → {preset?.name ?? "?"}
             <span class="text-ink-2 tabular-nums">{preset?.height_cm.toFixed(1) ?? ""}</span>
+            {#if timerDue[t.id] && !live.paused}
+              <span class="font-semibold tabular-nums">{countdown(timerDue[t.id])}</span>
+            {/if}
           </p>
         {/each}
         {#if live.paused}

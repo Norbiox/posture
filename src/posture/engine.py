@@ -15,6 +15,7 @@ from posture.domain.automation import (
     schedule_due,
     should_retry,
     timer_due,
+    timer_due_at,
 )
 from posture.domain.stance import Stance
 from posture.domain.stats import HeightEvent, StancePeriod, stance_period
@@ -63,6 +64,30 @@ class Engine:
                 schedule.id,
                 due.astimezone(self._config.tz).isoformat(timespec="minutes"),
             )
+
+    async def timer_due_times(self) -> dict[int, datetime]:
+        """When each enabled Timer fires in the current Stance period; others are left out."""
+        now = datetime.now(self._config.tz)
+        settings, _, automations, events = await asyncio.to_thread(self._read, now)
+        period = stance_period(events, settings.threshold_cm)
+        due: dict[int, datetime] = {}
+        for automation in automations:
+            match automation:
+                case AutomationRow(
+                    id=id_,
+                    enabled=True,
+                    kind="timer",
+                    stance=str() as stance,
+                    minutes=int() as minutes,
+                ):
+                    timer = Timer(id_, Stance(stance), minutes)
+                    last_fired = self._last_fired.get(id_)
+                    due_at = timer_due_at(timer, now, settings.work_hours(), period, last_fired)
+                    if due_at is not None:
+                        due[id_] = due_at
+                case _:
+                    pass
+        return due
 
     async def stop(self) -> None:
         self._scheduler.shutdown(wait=False)
