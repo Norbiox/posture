@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    container: python:3.14-alpine
+    env:
+      UV_PYTHON_DOWNLOADS: never # use the container's musl Python
+    steps:
+      - uses: actions/checkout@v7
+      - run: pip install uv
+      - run: uv sync --locked
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run ty check
+      - run: uv run pytest
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run check
+      - run: npm run build
+
+  # Runs only the hooks the jobs above do not cover (hygiene, shell, pragma ban);
+  # the Python and frontend hooks are skipped to avoid running them twice.
+  pre-commit:
+    runs-on: ubuntu-latest
+    env:
+      SKIP: ruff-check,ruff-format,ty,prettier,eslint
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+      - run: uv sync --locked
+      - run: uv run pre-commit run --all-files

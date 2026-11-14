@@ -1,0 +1,83 @@
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_stages: [pre-commit]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-merge-conflict
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.5
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1-1
+    hooks:
+      - id: shellcheck
+        args: [--shell=sh]
+
+  - repo: https://github.com/MaxWinterstein/shfmt-py
+    rev: v4.2.0
+    hooks:
+      - id: shfmt
+        args: [-w, -i, "2", -ci, -ln, posix]
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.5.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+
+  - repo: local
+    hooks:
+      # Local hooks run the project's pinned tools from uv.lock / package-lock.json.
+      - id: ty
+        name: ty check
+        entry: uv run ty check
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: prettier
+        name: prettier (frontend)
+        entry: npm --prefix frontend run format
+        language: system
+        files: ^frontend/
+        exclude: ^frontend/package-lock\.json$
+        pass_filenames: false
+      - id: eslint
+        name: eslint (frontend)
+        entry: npm --prefix frontend run lint
+        language: system
+        files: ^frontend/
+        exclude: ^frontend/package-lock\.json$
+        pass_filenames: false
+      - id: no-pragma-no-cover-in-domain
+        name: 'forbid "pragma: no cover" in domain'
+        entry: 'pragma:\s*no cover'
+        language: pygrep
+        files: ^src/posture/domain/
+      - id: pytest
+        name: pytest
+        entry: uv run pytest
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+      - id: svelte-check
+        name: svelte-check
+        entry: npm --prefix frontend run check
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true

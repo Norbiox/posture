@@ -1,0 +1,18 @@
+# Python / uv
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+dist/
+*.egg-info/
+
+# Node / Vite
+node_modules/
+
+# Local
+.env
+.DS_Store

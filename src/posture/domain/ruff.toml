@@ -1,0 +1,9 @@
+extend = "../../../pyproject.toml"
+
+[lint.flake8-tidy-imports.banned-api]
+"fastapi".msg = "The domain must not depend on frameworks or I/O."
+"starlette".msg = "The domain must not depend on frameworks or I/O."
+"bleak".msg = "The domain must not depend on frameworks or I/O."
+"idasen".msg = "The domain must not depend on frameworks or I/O."
+"sqlite3".msg = "The domain must not depend on frameworks or I/O."
+"apscheduler".msg = "The domain must not depend on frameworks or I/O."

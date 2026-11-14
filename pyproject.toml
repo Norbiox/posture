@@ -1,0 +1,41 @@
+[project]
+name = "posture"
+version = "0.1.0"
+description = "Control an IKEA Idasen desk and track sitting and standing time."
+requires-python = ">=3.14"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.12.16,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["pre-commit", "pytest", "pytest-cov", "ruff", "ty"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "COM812", # conflicts with the formatter
+  "ISC001", # conflicts with the formatter
+  "D203",   # incompatible with D211, which we keep
+  "D213",   # incompatible with D212, which we keep
+  "D1",     # docstrings are not required
+  "CPY001", # no copyright header policy; not in the agreed ignore list, flagged for review
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "S101",    # pytest uses plain assert
+  "PLR2004", # magic values are fine in test data
+]
+
+[tool.ty.rules]
+all = "error"
+
+[tool.pytest.ini_options]
+addopts = "--cov=posture.domain --cov-branch --cov-report=term-missing --cov-fail-under=100"
+testpaths = ["tests"]
