@@ -31,3 +31,4 @@ The fake Desk lets you run the app without hardware. Use it; never move the real
 - The API endpoints `state`, `presets`, `move`, `stop`, `pause` are a stable contract for the owner's dmenu script. Do not change their shape.
 - Conventional Commits. `main` must stay green. Branch and PR when the owner asks for one.
 - English in code, comments, docs, UI and commits.
+- After any change in `frontend/`, run `mise run build` before you ask the owner to test. The running app serves `frontend/dist`, and `mise run check` does not rebuild it.
