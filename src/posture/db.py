@@ -21,6 +21,17 @@ DEFAULTS = {
     "threshold_cm": 90.0,
 }
 
+# Heights measured on the owner's Desk.
+DEFAULT_PRESETS = {
+    "top": 119.5,
+    "walk": 115.4,
+    "upper-stand": 114.0,
+    "stand": 107.2,
+    "corechair": 70.0,
+    "sit": 66.6,
+    "bottom": 62.0,
+}
+
 
 @dataclass(frozen=True)
 class Preset:
@@ -75,6 +86,13 @@ class Db:
         path.parent.mkdir(parents=True, exist_ok=True)
         with self._conn() as conn:
             conn.executescript(Path(__file__).with_name("schema.sql").read_text())
+            # Seed once per database, so a Preset the owner deletes stays deleted.
+            if conn.execute("PRAGMA user_version").fetchone()[0] == 0:
+                conn.executemany(
+                    "INSERT OR IGNORE INTO presets (name, height_cm) VALUES (?, ?)",
+                    DEFAULT_PRESETS.items(),
+                )
+                conn.execute("PRAGMA user_version = 1")
 
     @contextmanager
     def _conn(self) -> Generator[sqlite3.Connection]:
