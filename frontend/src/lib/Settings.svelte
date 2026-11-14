@@ -21,7 +21,9 @@
   let presetName = $state("");
   let presetHeight = $state(100);
   let error = $state("");
-  let saved = $state(false);
+  // Last server copy: each form saves only its own fields on top of it.
+  let stored = $state<SettingsData | null>(null);
+  let saved = $state<"" | "work" | "stance">("");
 
   async function guard(action: () => Promise<void>): Promise<void> {
     error = "";
@@ -36,12 +38,13 @@
     holidays = await api<Holiday[]>("GET", "/holidays");
   };
 
-  const saveSettings = () =>
+  const saveSettings = (part: "work" | "stance", fields: Partial<SettingsData>) =>
     guard(async () => {
-      settings = await api<SettingsData>("PUT", "/settings", settings);
-      saved = true;
+      stored = await api<SettingsData>("PUT", "/settings", { ...stored, ...fields });
+      settings = { ...settings, ...fields };
+      saved = part;
       setTimeout(() => {
-        saved = false;
+        saved = "";
       }, 2000);
     });
 
@@ -85,68 +88,86 @@
 
   onMount(() => {
     void guard(async () => {
-      settings = await api<SettingsData>("GET", "/settings");
+      stored = await api<SettingsData>("GET", "/settings");
+      settings = { ...stored };
       await loadHolidays();
     });
   });
 </script>
 
 <section class="grid gap-x-12 gap-y-10 lg:grid-cols-2">
-  <form
-    class="flex flex-col gap-4 border-t border-ink pt-4"
-    onsubmit={(event) => {
-      event.preventDefault();
-      void saveSettings();
-    }}
-  >
-    <h2>Work Hours</h2>
-    <div class="flex flex-wrap gap-3">
-      <label class="field">
-        From
-        <input type="time" class="input" required bind:value={settings.work_start} />
-      </label>
-      <label class="field">
-        To
-        <input type="time" class="input" required bind:value={settings.work_end} />
-      </label>
-    </div>
-    <fieldset class="flex flex-col gap-1">
-      <legend class="mb-1 text-[0.8125rem] text-ink-2">Workdays</legend>
-      <div class="flex flex-wrap gap-px">
-        {#each days as name, day (day)}
-          <label
-            class="flex h-9 min-w-12 cursor-pointer items-center justify-center border border-rule-strong px-2 has-checked:border-ink has-checked:bg-ink has-checked:text-paper has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink"
-          >
-            <input
-              type="checkbox"
-              class="sr-only"
-              checked={settings.workdays.includes(day)}
-              onchange={() => {
-                toggleDay(day);
-              }}
-            />
-            {name}
-          </label>
-        {/each}
+  <div class="flex flex-col gap-y-10">
+    <form
+      class="flex flex-col gap-4 border-t border-ink pt-4"
+      onsubmit={(event) => {
+        event.preventDefault();
+        const { work_start, work_end, workdays } = settings;
+        void saveSettings("work", { work_start, work_end, workdays });
+      }}
+    >
+      <h2>Work Hours</h2>
+      <div class="flex flex-wrap gap-3">
+        <label class="field">
+          From
+          <input type="time" class="input" required bind:value={settings.work_start} />
+        </label>
+        <label class="field">
+          To
+          <input type="time" class="input" required bind:value={settings.work_end} />
+        </label>
       </div>
-    </fieldset>
-    <label class="field">
-      Standing from Height, cm (Stance threshold)
-      <input
-        type="number"
-        min="62"
-        max="127"
-        step="0.5"
-        class="input w-32"
-        required
-        bind:value={settings.threshold_cm}
-      />
-    </label>
-    <div class="flex items-center gap-3">
-      <button class="btn btn-solid">Save Work Hours</button>
-      {#if saved}<span class="text-sm" role="status">Saved.</span>{/if}
-    </div>
-  </form>
+      <fieldset class="flex flex-col gap-1">
+        <legend class="mb-1 text-[0.8125rem] text-ink-2">Workdays</legend>
+        <div class="flex flex-wrap gap-px">
+          {#each days as name, day (day)}
+            <label
+              class="flex h-9 min-w-12 cursor-pointer items-center justify-center border border-rule-strong px-2 has-checked:border-ink has-checked:bg-ink has-checked:text-paper has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink"
+            >
+              <input
+                type="checkbox"
+                class="sr-only"
+                checked={settings.workdays.includes(day)}
+                onchange={() => {
+                  toggleDay(day);
+                }}
+              />
+              {name}
+            </label>
+          {/each}
+        </div>
+      </fieldset>
+      <div class="flex items-center gap-3">
+        <button class="btn btn-solid">Save Work Hours</button>
+        {#if saved === "work"}<span class="text-sm" role="status">Saved.</span>{/if}
+      </div>
+    </form>
+
+    <form
+      class="flex flex-col gap-4 border-t border-ink pt-4"
+      onsubmit={(event) => {
+        event.preventDefault();
+        void saveSettings("stance", { threshold_cm: settings.threshold_cm });
+      }}
+    >
+      <h2>Stance</h2>
+      <label class="field">
+        Standing from Height, cm
+        <input
+          type="number"
+          min="62"
+          max="127"
+          step="0.5"
+          class="input w-32"
+          required
+          bind:value={settings.threshold_cm}
+        />
+      </label>
+      <div class="flex items-center gap-3">
+        <button class="btn btn-solid">Save Stance threshold</button>
+        {#if saved === "stance"}<span class="text-sm" role="status">Saved.</span>{/if}
+      </div>
+    </form>
+  </div>
 
   <div class="flex flex-col gap-4 border-t border-ink pt-4">
     <h2>Presets</h2>
