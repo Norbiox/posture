@@ -1,0 +1,347 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-14T17:08:14+00:00",
+  "title": "Design System: Posture",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Drafting Vellum",
+        "canonical": "oklch(96.6% 0.009 92)",
+        "darkCanonical": "oklch(21.5% 0.01 255)",
+        "tonalRamp": [
+          "oklch(15% 0.003 92)",
+          "oklch(26% 0.005 92)",
+          "oklch(37% 0.007 92)",
+          "oklch(48% 0.010 92)",
+          "oklch(59% 0.010 92)",
+          "oklch(70% 0.008 92)",
+          "oklch(82% 0.006 92)",
+          "oklch(95% 0.003 92)"
+        ]
+      },
+      "paper-2": {
+        "role": "neutral",
+        "displayName": "Vellum Shade",
+        "canonical": "oklch(93.6% 0.011 92)",
+        "darkCanonical": "oklch(25.5% 0.011 255)",
+        "tonalRamp": [
+          "oklch(15% 0.003 92)",
+          "oklch(26% 0.005 92)",
+          "oklch(37% 0.007 92)",
+          "oklch(48% 0.010 92)",
+          "oklch(59% 0.010 92)",
+          "oklch(70% 0.008 92)",
+          "oklch(82% 0.006 92)",
+          "oklch(95% 0.003 92)"
+        ]
+      },
+      "ink": {
+        "role": "primary",
+        "displayName": "Graphite Ink",
+        "canonical": "oklch(25% 0.012 255)",
+        "darkCanonical": "oklch(93% 0.01 92)",
+        "tonalRamp": [
+          "oklch(15% 0.003 255)",
+          "oklch(26% 0.006 255)",
+          "oklch(37% 0.008 255)",
+          "oklch(48% 0.011 255)",
+          "oklch(59% 0.011 255)",
+          "oklch(70% 0.009 255)",
+          "oklch(82% 0.006 255)",
+          "oklch(95% 0.003 255)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Soft Graphite",
+        "canonical": "oklch(46% 0.012 255)",
+        "darkCanonical": "oklch(74% 0.01 92)",
+        "tonalRamp": [
+          "oklch(15% 0.003 255)",
+          "oklch(26% 0.006 255)",
+          "oklch(37% 0.008 255)",
+          "oklch(48% 0.011 255)",
+          "oklch(59% 0.011 255)",
+          "oklch(70% 0.009 255)",
+          "oklch(82% 0.006 255)",
+          "oklch(95% 0.003 255)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Pale Rule",
+        "canonical": "oklch(81% 0.012 92)",
+        "darkCanonical": "oklch(37% 0.012 255)",
+        "tonalRamp": [
+          "oklch(15% 0.003 92)",
+          "oklch(26% 0.006 92)",
+          "oklch(37% 0.008 92)",
+          "oklch(48% 0.011 92)",
+          "oklch(59% 0.011 92)",
+          "oklch(70% 0.009 92)",
+          "oklch(82% 0.006 92)",
+          "oklch(95% 0.003 92)"
+        ]
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "Strong Rule",
+        "canonical": "oklch(62% 0.012 255)",
+        "darkCanonical": "oklch(58% 0.012 255)",
+        "tonalRamp": [
+          "oklch(15% 0.003 255)",
+          "oklch(26% 0.006 255)",
+          "oklch(37% 0.008 255)",
+          "oklch(48% 0.011 255)",
+          "oklch(59% 0.011 255)",
+          "oklch(70% 0.009 255)",
+          "oklch(82% 0.006 255)",
+          "oklch(95% 0.003 255)"
+        ]
+      },
+      "pencil": {
+        "role": "secondary",
+        "displayName": "Red Pencil",
+        "canonical": "oklch(53% 0.19 28)",
+        "darkCanonical": "oklch(70% 0.16 28)",
+        "tonalRamp": [
+          "oklch(15% 0.055 28)",
+          "oklch(26% 0.092 28)",
+          "oklch(37% 0.129 28)",
+          "oklch(48% 0.166 28)",
+          "oklch(59% 0.176 28)",
+          "oklch(70% 0.139 28)",
+          "oklch(82% 0.099 28)",
+          "oklch(95% 0.055 28)"
+        ]
+      },
+      "pencil-wash": {
+        "role": "secondary",
+        "displayName": "Pencil Wash",
+        "canonical": "oklch(93% 0.035 28)",
+        "darkCanonical": "oklch(30% 0.06 28)",
+        "tonalRamp": [
+          "oklch(15% 0.017 28)",
+          "oklch(26% 0.029 28)",
+          "oklch(37% 0.041 28)",
+          "oklch(48% 0.053 28)",
+          "oklch(59% 0.056 28)",
+          "oklch(70% 0.044 28)",
+          "oklch(82% 0.031 28)",
+          "oklch(95% 0.017 28)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Height Figure",
+        "purpose": "The single live Height figure beside the dimension line."
+      },
+      "headline": {
+        "displayName": "Wordmark",
+        "purpose": "The Posture wordmark in the top bar."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Sitting and standing totals, Stats date (1.25rem there)."
+      },
+      "title": {
+        "displayName": "Section Title",
+        "purpose": "Uppercase condensed section headings (Next, Today)."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text, table cells, inputs, tabs at 0.9375rem/500."
+      },
+      "label": {
+        "displayName": "Field Label",
+        "purpose": "Labels above inputs, in soft graphite."
+      },
+      "table-head": {
+        "displayName": "Table Head",
+        "purpose": "Ruled-schedule column heads, uppercase, soft graphite."
+      },
+      "mono": {
+        "displayName": "Log Mono",
+        "purpose": "Logs lines only."
+      }
+    },
+    "shadows": [],
+    "strokes": [
+      {
+        "name": "hairline",
+        "value": "1px solid",
+        "purpose": "All borders and region rules."
+      },
+      {
+        "name": "tab-underline",
+        "value": "2px solid var(--color-ink)",
+        "purpose": "Active tab."
+      },
+      {
+        "name": "chain-line",
+        "value": "stroke-dasharray: 14 4 2 4",
+        "purpose": "Datum: Stance threshold in the drawing and the Stats plot."
+      },
+      {
+        "name": "hidden-line",
+        "value": "stroke-dasharray: 5 4",
+        "purpose": "Desk linework while disconnected (last known Height)."
+      },
+      {
+        "name": "focus-ring",
+        "value": "outline: 2px solid var(--color-ink); outline-offset: 2px",
+        "purpose": "Global focus-visible."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-state",
+        "value": "120ms ease-out",
+        "purpose": "Button background and colour."
+      },
+      {
+        "name": "desk-travel",
+        "value": "280ms linear",
+        "purpose": "Desktop, column stages, dimension line and Height label following live Height; disabled under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Default action: transparent, 1px ink border, square.",
+      "html": "<button class=\"ds-btn\">Save Preset</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:36px; padding:0 14px; border:1px solid var(--color-ink); border-radius:0; background:transparent; color:var(--color-ink); font-family:Barlow, ui-sans-serif, sans-serif; font-weight:500; font-size:16px; cursor:pointer; transition:background-color 120ms ease-out, color 120ms ease-out; } .ds-btn:hover { background:var(--color-paper-2); } .ds-btn:focus-visible { outline:2px solid var(--color-ink); outline-offset:2px; } .ds-btn:disabled { border-color:var(--color-rule); color:var(--color-ink-2); background:transparent; cursor:not-allowed; }"
+    },
+    {
+      "name": "Solid Button",
+      "kind": "button",
+      "refersTo": "button-solid",
+      "description": "Primary form save, and Resume Automations while paused.",
+      "html": "<button class=\"ds-btn ds-btn-solid\">Save Work Hours</button>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:36px; padding:0 14px; border:1px solid var(--color-ink); border-radius:0; background:transparent; color:var(--color-ink); font-family:Barlow, ui-sans-serif, sans-serif; font-weight:500; font-size:16px; cursor:pointer; transition:background-color 120ms ease-out, color 120ms ease-out; } .ds-btn:hover { background:var(--color-paper-2); } .ds-btn:focus-visible { outline:2px solid var(--color-ink); outline-offset:2px; } .ds-btn:disabled { border-color:var(--color-rule); color:var(--color-ink-2); background:transparent; cursor:not-allowed; } .ds-btn-solid { background:var(--color-ink); color:var(--color-paper); } .ds-btn-solid:hover { background:var(--color-ink-2); }"
+    },
+    {
+      "name": "Quiet and Danger Buttons",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Small row actions; danger is soft graphite, never red.",
+      "html": "<span style=\"display:flex;gap:8px\"><button class=\"ds-btn ds-btn-sm ds-btn-quiet\">Edit</button><button class=\"ds-btn ds-btn-sm ds-btn-danger\">Delete</button></span>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:36px; padding:0 14px; border:1px solid var(--color-ink); border-radius:0; background:transparent; color:var(--color-ink); font-family:Barlow, ui-sans-serif, sans-serif; font-weight:500; font-size:16px; cursor:pointer; transition:background-color 120ms ease-out, color 120ms ease-out; } .ds-btn:hover { background:var(--color-paper-2); } .ds-btn:focus-visible { outline:2px solid var(--color-ink); outline-offset:2px; } .ds-btn:disabled { border-color:var(--color-rule); color:var(--color-ink-2); background:transparent; cursor:not-allowed; } .ds-btn-sm { min-height:30px; padding:0 10px; font-size:14px; } .ds-btn-quiet { border-color:var(--color-rule); } .ds-btn-danger { color:var(--color-ink-2); border-color:var(--color-rule); } .ds-btn-danger:hover { color:var(--color-ink); border-color:var(--color-ink); }"
+    },
+    {
+      "name": "Hold and Stop",
+      "kind": "custom",
+      "refersTo": "button-stop",
+      "description": "Hold-to-move fills ink while pressed; Stop is always on, in red pencil, solid while the Desk moves.",
+      "html": "<div class=\"ds-hold-row\"><button class=\"ds-btn ds-hold\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><path d=\"M7 2 L13 11 H1 Z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linejoin=\"miter\"/></svg>Hold to move Up</button><button class=\"ds-btn ds-stop\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><rect x=\"1\" y=\"1\" width=\"10\" height=\"10\" fill=\"currentColor\"/></svg>Stop</button><button class=\"ds-btn ds-stop ds-stop-moving\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" aria-hidden=\"true\"><rect x=\"1\" y=\"1\" width=\"10\" height=\"10\" fill=\"currentColor\"/></svg>Stop</button></div>",
+      "css": ".ds-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:36px; padding:0 14px; border:1px solid var(--color-ink); border-radius:0; background:transparent; color:var(--color-ink); font-family:Barlow, ui-sans-serif, sans-serif; font-weight:500; font-size:16px; cursor:pointer; transition:background-color 120ms ease-out, color 120ms ease-out; } .ds-btn:hover { background:var(--color-paper-2); } .ds-btn:focus-visible { outline:2px solid var(--color-ink); outline-offset:2px; } .ds-btn:disabled { border-color:var(--color-rule); color:var(--color-ink-2); background:transparent; cursor:not-allowed; } .ds-hold-row { display:grid; grid-template-columns:1fr auto auto; gap:8px; border-top:1px solid var(--color-ink); padding-top:16px; } .ds-hold, .ds-stop { height:56px; } .ds-hold:active { background:var(--color-ink); color:var(--color-paper); } .ds-stop { border-color:var(--color-pencil); color:var(--color-pencil); padding:0 24px; font-weight:600; } .ds-stop:hover { background:var(--color-pencil-wash); } .ds-stop-moving, .ds-stop-moving:hover { background:var(--color-pencil); color:var(--color-paper); }"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Label above a square paper input with strong-rule border.",
+      "html": "<label class=\"ds-field\">New Preset at current Height<input class=\"ds-input\" placeholder=\"Name, e.g. Standing\"></label>",
+      "css": ".ds-field { display:flex; flex-direction:column; gap:4px; font-family:Barlow, ui-sans-serif, sans-serif; font-size:13px; color:var(--color-ink-2); } .ds-input { min-height:36px; padding:0 10px; border:1px solid var(--color-rule-strong); border-radius:0; background:var(--color-paper); color:var(--color-ink); font:inherit; font-size:16px; font-variant-numeric:tabular-nums; } .ds-input:hover { border-color:var(--color-ink); } .ds-input:focus-visible { outline:2px solid var(--color-ink); outline-offset:2px; } .ds-input::placeholder { color:var(--color-ink-2); }"
+    },
+    {
+      "name": "Tabs",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "Text tabs whose 2px underline sits on the header ink rule.",
+      "html": "<nav class=\"ds-tabs\" role=\"tablist\"><span class=\"ds-mark\">Posture</span><button class=\"ds-tab\" aria-selected=\"true\">Control</button><button class=\"ds-tab\">Stats</button><button class=\"ds-tab\">Automations</button></nav>",
+      "css": ".ds-tabs { display:flex; align-items:flex-end; gap:20px; border-bottom:1px solid var(--color-ink); font-family:Barlow, ui-sans-serif, sans-serif; } .ds-mark { font-family:'Barlow Condensed', Barlow, sans-serif; font-weight:600; font-size:24px; letter-spacing:0.02em; line-height:1; padding-bottom:8px; margin-right:12px; color:var(--color-ink); } .ds-tab { margin-bottom:-1px; padding:0 0 8px; border:0; border-bottom:2px solid transparent; background:none; color:var(--color-ink-2); font:inherit; font-size:15px; font-weight:500; cursor:pointer; transition:color 150ms; } .ds-tab:hover { color:var(--color-ink); } .ds-tab[aria-selected=true] { color:var(--color-ink); border-bottom-color:var(--color-ink); } .ds-tab:focus-visible { outline:2px solid var(--color-ink); outline-offset:2px; }"
+    },
+    {
+      "name": "Ruled Schedule",
+      "kind": "card",
+      "refersTo": "table-head",
+      "description": "Boxless table: condensed uppercase head over an ink rule, pale row rules.",
+      "html": "<table class=\"ds-sheet\"><thead><tr><th>Time</th><th>Automation</th><th class=\"r\">Preset</th></tr></thead><tbody><tr class=\"next\"><td class=\"c\">19:00</td><td>Schedule</td><td class=\"r\">Standing <span class=\"c dim\">118.0</span></td></tr><tr><td class=\"c\">22:00</td><td>Work Hours end</td><td class=\"r dim\">–</td></tr></tbody></table>",
+      "css": ".ds-sheet { width:100%; border-collapse:collapse; font-family:Barlow, ui-sans-serif, sans-serif; color:var(--color-ink); font-variant-numeric:tabular-nums; } .ds-sheet th { text-align:left; font-family:'Barlow Condensed', Barlow, sans-serif; font-weight:500; font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color:var(--color-ink-2); padding:6px 12px 6px 0; border-bottom:1px solid var(--color-ink); } .ds-sheet td { padding:8px 12px 8px 0; border-bottom:1px solid var(--color-rule); } .ds-sheet .r { text-align:right; } .ds-sheet .c { font-family:'Barlow Condensed', Barlow, sans-serif; } .ds-sheet .dim { color:var(--color-ink-2); } .ds-sheet tr.next { font-weight:600; }"
+    },
+    {
+      "name": "Workday Cells",
+      "kind": "chip",
+      "refersTo": "button-solid",
+      "description": "Adjacent square toggle cells; checked fills ink.",
+      "html": "<div class=\"ds-cells\"><label class=\"on\">Mon</label><label class=\"on\">Tue</label><label>Sat</label></div>",
+      "css": ".ds-cells { display:flex; gap:1px; font-family:Barlow, ui-sans-serif, sans-serif; } .ds-cells label { display:flex; height:36px; min-width:48px; align-items:center; justify-content:center; padding:0 8px; border:1px solid var(--color-rule-strong); color:var(--color-ink); cursor:pointer; } .ds-cells label.on { border-color:var(--color-ink); background:var(--color-ink); color:var(--color-paper); }"
+    },
+    {
+      "name": "Desk Elevation",
+      "kind": "custom",
+      "refersTo": "display",
+      "description": "Signature: IDÅSEN side profile to scale with dimension line, Height figure, level markers and threshold chain line.",
+      "html": "<div class=\"ds-elev\"><svg viewBox=\"0 0 600 400\" aria-hidden=\"true\"><line x1=\"16\" x2=\"592\" y1=\"380\" y2=\"380\" stroke=\"var(--color-ink)\" stroke-width=\"1.5\"/><line x1=\"16\" x2=\"592\" y1=\"133\" y2=\"133\" stroke=\"var(--color-ink-2)\" stroke-dasharray=\"14 4 2 4\"/><line x1=\"386\" x2=\"592\" y1=\"193\" y2=\"193\" stroke=\"var(--color-ink-2)\"/><path d=\"M398 193 l-6 -9 h12 z\" fill=\"var(--color-ink)\" stroke=\"var(--color-ink)\"/><g fill=\"var(--color-paper-2)\" stroke=\"var(--color-ink)\"><path d=\"M264.6 289 V304.6 L199.6 369.6 H184 Z M285.4 289 V304.6 L350.4 369.6 H366 Z\"/><rect x=\"181.4\" y=\"369.6\" width=\"187.2\" height=\"6.5\"/><rect x=\"181.4\" y=\"376.1\" width=\"15.6\" height=\"3.9\"/><rect x=\"353\" y=\"376.1\" width=\"15.6\" height=\"3.9\"/><rect x=\"267.2\" y=\"201.8\" width=\"15.6\" height=\"104\"/><rect x=\"264.6\" y=\"255.2\" width=\"20.8\" height=\"114.4\"/><rect x=\"219.1\" y=\"200.6\" width=\"111.8\" height=\"5.2\"/><rect x=\"181.4\" y=\"200.6\" width=\"13\" height=\"6.5\"/><rect x=\"171\" y=\"193\" width=\"208\" height=\"7.8\"/></g><g stroke=\"var(--color-ink)\"><line x1=\"152\" x2=\"152\" y1=\"193\" y2=\"380\"/><line x1=\"142\" x2=\"167\" y1=\"193\" y2=\"193\"/><line x1=\"147\" x2=\"157\" y1=\"198\" y2=\"188\" stroke-width=\"2\"/><line x1=\"147\" x2=\"157\" y1=\"385\" y2=\"375\" stroke-width=\"2\"/></g></svg><span class=\"ds-h\">72.0<small>cm</small></span></div>",
+      "css": ".ds-elev { position:relative; aspect-ratio:600/400; width:100%; max-width:480px; } .ds-elev svg { position:absolute; inset:0; width:100%; height:100%; } .ds-h { position:absolute; right:77%; top:72%; transform:translateY(-50%); display:flex; flex-direction:column; align-items:flex-end; font-family:'Barlow Condensed', Barlow, sans-serif; font-weight:600; font-size:48px; line-height:1; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; color:var(--color-ink); } .ds-h small { margin-top:4px; font-family:Barlow, sans-serif; font-weight:400; font-size:12px; color:var(--color-ink-2); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Section Drawing",
+    "overview": "**Creative North Star: \"The Section Drawing\"**\n\nPosture is a sheet of drafting vellum with one drawing on it: a side elevation of the IKEA IDÅSEN Desk, drawn to scale, with Height shown as a dimension line and Presets as level markers. Everything else on the sheet follows drafting conventions too. Hairline rules split the page into regions, tables are ruled schedules, and labels are set in a condensed technical sans with tabular figures. The UI doesn't report the Desk's state. It draws it.\n\nThe palette is graphite ink on warm off-white, with one red pencil. The pencil marks only the Desk moving and the Stop control, so when red appears, something physical is happening. Dark mode inverts the vellum (light ink on graphite) and stays neutral rather than turning blueprint navy. Density is high and direct, built for one owner who glances. Nothing is ornamental: no cards, no shadows, no rounded corners, no coloured status badges.",
+    "keyCharacteristics": [
+      "One signature drawing (the IDÅSEN side elevation) carries live state through geometry, line style and one colour.",
+      "1px hairlines build the whole layout. A full-ink rule opens a region and a pale rule divides inside it.",
+      "Square corners everywhere (radius 0).",
+      "Barlow for running text, Barlow Condensed for headings, figures and table heads, with tabular numerals throughout.",
+      "Red pencil is a signal, never decoration."
+    ],
+    "rules": [
+      {
+        "name": "The Red Pencil Rule",
+        "body": "Pencil red appears only when the Desk is moving and on Stop. Destructive actions such as Delete use the soft-graphite `button-danger`, not red.",
+        "section": "colors"
+      },
+      {
+        "name": "The Inverted Vellum Rule",
+        "body": "Dark mode inverts ink and paper and keeps the neutrals neutral. It never becomes a blueprint-blue scheme.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Figure Rule",
+        "body": "Every number (Height, times, durations, Preset heights) uses tabular numerals. Times and heights inside tables use the condensed face.",
+        "section": "typography"
+      },
+      {
+        "name": "The Hairline Sheet Rule",
+        "body": "Regions are formed by 1px rules, never by boxes. An ink rule opens a region (border-t ink plus 16px of padding), and pale rules divide rows inside it.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Sheet Rule",
+        "body": "Nothing floats. There are no shadows, cards, overlays or blur. A state change shows up as a fill swap (paper-2 or ink) or a line-style change.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** build regions from 1px rules: an ink rule opens a region and pale rules divide within it.",
+      "**Do** keep every corner square and every surface flat.",
+      "**Do** use drafting conventions for state: chain line for a datum, hidden-line dashes for unknown, filled versus outlined triangles for current versus other.",
+      "**Do** set every number in tabular figures, and use the condensed face for figures and headings.",
+      "**Do** keep Stop visible and enabled at all times, in pencil.",
+      "**Do** keep the Desk drawing true to the IDÅSEN side profile and to scale (2.6px per cm)."
+    ],
+    "donts": [
+      "**Don't** use pencil red for anything except the Desk moving and Stop, and that includes destructive actions.",
+      "**Don't** add shadows, cards, rounded corners or coloured status badges.",
+      "**Don't** make dark mode blueprint navy. Invert the vellum instead.",
+      "**Don't** shrink or remove the large Height figure."
+    ]
+  }
+}

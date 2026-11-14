@@ -1,16 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { api, errorText, presets, type Stance } from "./api.svelte";
-
-  interface Automation {
-    id: number;
-    kind: "schedule" | "timer";
-    enabled: boolean;
-    preset_id: number;
-    time_of_day: string | null;
-    stance: Stance | null;
-    minutes: number | null;
-  }
+  import { api, errorText, presets, type Automation, type Stance } from "./api.svelte";
 
   let automations = $state<Automation[]>([]);
   let error = $state("");
@@ -24,7 +14,11 @@
   const presetName = (id: number) => presets.find((p) => p.id === id)?.name ?? "?";
 
   async function load(): Promise<void> {
-    automations = await api<Automation[]>("GET", "/automations");
+    const sortKey = (a: Automation) =>
+      a.kind === "schedule" ? `0${a.time_of_day ?? ""}` : `1${String(a.minutes).padStart(4, "0")}`;
+    automations = (await api<Automation[]>("GET", "/automations")).sort((a, b) =>
+      sortKey(a).localeCompare(sortKey(b)),
+    );
   }
 
   function body(enabled: boolean) {
@@ -76,98 +70,119 @@
   });
 </script>
 
-<section class="space-y-4">
-  <ul class="space-y-2">
-    {#each automations as a (a.id)}
-      <li class="flex flex-wrap items-center gap-2 rounded border p-2">
-        <input
-          type="checkbox"
-          checked={a.enabled}
-          onchange={() => toggle(a)}
-          aria-label="Enabled"
-        />
-        <span class="grow">
-          {#if a.kind === "schedule"}
-            Schedule: at {a.time_of_day} move to {presetName(a.preset_id)}
-          {:else}
-            Timer: after {a.minutes} min {a.stance} move to {presetName(a.preset_id)}
-          {/if}
-        </span>
-        <button
-          class="rounded border px-2 py-1"
-          onclick={() => {
-            edit(a);
-          }}>Edit</button
+<section class="flex flex-col gap-8">
+  <table class="sheet-table">
+    <thead>
+      <tr>
+        <th class="w-10"><span class="sr-only">Enabled</span></th>
+        <th>Rule</th>
+        <th>Preset</th>
+        <th><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {#each automations as a (a.id)}
+        <tr class="{a.enabled ? '' : 'text-ink-2'} {editing === a.id ? 'bg-paper-2' : ''}">
+          <td>
+            <input
+              type="checkbox"
+              class="size-4 cursor-pointer align-middle"
+              checked={a.enabled}
+              onchange={() => toggle(a)}
+              aria-label="Enabled"
+            />
+          </td>
+          <td>
+            {#if a.kind === "schedule"}
+              <span class="font-cond mr-2 text-base font-semibold">{a.time_of_day}</span>
+              Schedule
+            {:else}
+              <span class="font-cond mr-2 text-base font-semibold">+{a.minutes} min</span>
+              Timer, after {a.minutes} min {a.stance}
+            {/if}
+          </td>
+          <td>{presetName(a.preset_id)}</td>
+          <td class="text-right whitespace-nowrap">
+            <button
+              class="btn btn-sm btn-quiet"
+              onclick={() => {
+                edit(a);
+              }}>Edit</button
+            >
+            <button class="btn btn-sm btn-danger" onclick={() => remove(a)}>Delete</button>
+          </td>
+        </tr>
+      {:else}
+        <tr
+          ><td colspan="4" class="py-4 text-ink-2">No Automations yet. Add the first below.</td></tr
         >
-        <button class="rounded border px-2 py-1 text-red-700" onclick={() => remove(a)}
-          >Delete</button
-        >
-      </li>
-    {:else}
-      <li class="text-gray-500">No Automations yet.</li>
-    {/each}
-  </ul>
+      {/each}
+    </tbody>
+  </table>
 
   <form
-    class="flex flex-wrap items-end gap-2 rounded border p-3"
+    class="flex flex-col gap-4 border-t border-ink pt-4"
     onsubmit={(event) => {
       event.preventDefault();
       void save();
     }}
   >
-    <label class="flex flex-col text-sm">
-      Type
-      <select class="rounded border px-2 py-1" bind:value={kind}>
-        <option value="schedule">Schedule</option>
-        <option value="timer">Timer</option>
-      </select>
-    </label>
-    {#if kind === "schedule"}
-      <label class="flex flex-col text-sm">
-        Time
-        <input type="time" class="rounded border px-2 py-1" required bind:value={timeOfDay} />
-      </label>
-    {:else}
-      <label class="flex flex-col text-sm">
-        Stance
-        <select class="rounded border px-2 py-1" bind:value={stance}>
-          <option value="sitting">Sitting</option>
-          <option value="standing">Standing</option>
+    <h2>{editing === null ? "New Automation" : "Edit Automation"}</h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <label class="field">
+        Type
+        <select class="input" bind:value={kind}>
+          <option value="schedule">Schedule</option>
+          <option value="timer">Timer</option>
         </select>
       </label>
-      <label class="flex flex-col text-sm">
-        Minutes
-        <input
-          type="number"
-          min="1"
-          max="1440"
-          class="w-24 rounded border px-2 py-1"
-          required
-          bind:value={minutes}
-        />
+      {#if kind === "schedule"}
+        <label class="field">
+          Time
+          <input type="time" class="input" required bind:value={timeOfDay} />
+        </label>
+      {:else}
+        <label class="field">
+          Stance
+          <select class="input" bind:value={stance}>
+            <option value="sitting">Sitting</option>
+            <option value="standing">Standing</option>
+          </select>
+        </label>
+        <label class="field">
+          Minutes
+          <input
+            type="number"
+            min="1"
+            max="1440"
+            class="input w-24"
+            required
+            bind:value={minutes}
+          />
+        </label>
+      {/if}
+      <label class="field">
+        Move to Preset
+        <select class="input" required bind:value={presetId}>
+          <option value={0} disabled>Choose…</option>
+          {#each presets as preset (preset.id)}
+            <option value={preset.id}>{preset.name}</option>
+          {/each}
+        </select>
       </label>
-    {/if}
-    <label class="flex flex-col text-sm">
-      Move to Preset
-      <select class="rounded border px-2 py-1" required bind:value={presetId}>
-        <option value={0} disabled>Choose...</option>
-        {#each presets as preset (preset.id)}
-          <option value={preset.id}>{preset.name}</option>
-        {/each}
-      </select>
-    </label>
-    <button class="rounded bg-blue-600 px-3 py-1 text-white">
-      {editing === null ? "Add" : "Save"}
-    </button>
-    {#if editing !== null}
-      <button
-        type="button"
-        class="rounded border px-3 py-1"
-        onclick={() => {
-          editing = null;
-        }}>Cancel</button
-      >
-    {/if}
+      <button class="btn btn-solid">
+        {editing === null ? "Add Automation" : "Save"}
+      </button>
+      {#if editing !== null}
+        <button
+          type="button"
+          class="btn btn-quiet"
+          onclick={() => {
+            editing = null;
+          }}>Cancel</button
+        >
+      {/if}
+    </div>
   </form>
-  {#if error}<p class="text-red-600">{error}</p>{/if}
+  {#if error}<p class="error" role="alert">{error}</p>{/if}
 </section>

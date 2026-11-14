@@ -1,13 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { api, errorText, loadPresets, presets } from "./api.svelte";
+  import { api, errorText, loadPresets, presets, type SettingsData } from "./api.svelte";
 
-  interface SettingsData {
-    work_start: string;
-    work_end: string;
-    workdays: number[];
-    threshold_cm: number;
-  }
   interface Holiday {
     date: string;
     name: string;
@@ -97,144 +91,165 @@
   });
 </script>
 
-<section class="space-y-8">
+<section class="grid gap-x-12 gap-y-10 lg:grid-cols-2">
   <form
-    class="space-y-3"
+    class="flex flex-col gap-4 border-t border-ink pt-4"
     onsubmit={(event) => {
       event.preventDefault();
       void saveSettings();
     }}
   >
-    <h2 class="text-lg font-bold">Work Hours</h2>
+    <h2>Work Hours</h2>
     <div class="flex flex-wrap gap-3">
-      <label class="flex flex-col text-sm">
+      <label class="field">
         From
-        <input
-          type="time"
-          class="rounded border px-2 py-1"
-          required
-          bind:value={settings.work_start}
-        />
+        <input type="time" class="input" required bind:value={settings.work_start} />
       </label>
-      <label class="flex flex-col text-sm">
+      <label class="field">
         To
-        <input
-          type="time"
-          class="rounded border px-2 py-1"
-          required
-          bind:value={settings.work_end}
-        />
+        <input type="time" class="input" required bind:value={settings.work_end} />
       </label>
     </div>
-    <div class="flex flex-wrap gap-3">
-      {#each days as name, day (day)}
-        <label class="flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={settings.workdays.includes(day)}
-            onchange={() => {
-              toggleDay(day);
-            }}
-          />
-          {name}
-        </label>
-      {/each}
-    </div>
-    <label class="flex flex-col text-sm">
-      Standing from Height (cm)
+    <fieldset class="flex flex-col gap-1">
+      <legend class="mb-1 text-[0.8125rem] text-ink-2">Workdays</legend>
+      <div class="flex flex-wrap gap-px">
+        {#each days as name, day (day)}
+          <label
+            class="flex h-9 min-w-12 cursor-pointer items-center justify-center border border-rule-strong px-2 has-checked:border-ink has-checked:bg-ink has-checked:text-paper has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink"
+          >
+            <input
+              type="checkbox"
+              class="sr-only"
+              checked={settings.workdays.includes(day)}
+              onchange={() => {
+                toggleDay(day);
+              }}
+            />
+            {name}
+          </label>
+        {/each}
+      </div>
+    </fieldset>
+    <label class="field">
+      Standing from Height, cm (Stance threshold)
       <input
         type="number"
         min="62"
         max="127"
         step="0.5"
-        class="w-32 rounded border px-2 py-1"
+        class="input w-32"
         required
         bind:value={settings.threshold_cm}
       />
     </label>
-    <button class="rounded bg-blue-600 px-3 py-1 text-white">Save</button>
-    {#if saved}<span class="text-green-700">Saved</span>{/if}
+    <div class="flex items-center gap-3">
+      <button class="btn btn-solid">Save Work Hours</button>
+      {#if saved}<span class="text-sm" role="status">Saved.</span>{/if}
+    </div>
   </form>
 
-  <div class="space-y-2">
-    <h2 class="text-lg font-bold">Holidays</h2>
-    <ul class="space-y-1">
-      {#each holidays as holiday (holiday.date + holiday.name)}
-        <li class="flex items-center gap-2">
-          <span class="tabular-nums">{holiday.date}</span>
-          <span class="grow">{holiday.name}</span>
-          {#if holiday.automatic}
-            <span class="text-sm text-gray-500">automatic</span>
-          {:else}
-            <button
-              class="rounded border px-2 py-1 text-red-700"
-              onclick={() => removeHoliday(holiday.date)}>Remove</button
-            >
-          {/if}
-        </li>
-      {/each}
-    </ul>
+  <div class="flex flex-col gap-4 border-t border-ink pt-4">
+    <h2>Presets</h2>
+    <table class="sheet-table">
+      <thead><tr><th>Name</th><th>Height, cm</th><th></th></tr></thead>
+      <tbody>
+        {#each presets as preset (preset.id)}
+          <tr>
+            <td><input class="input w-full" bind:value={preset.name} aria-label="Name" /></td>
+            <td>
+              <input
+                type="number"
+                min="62"
+                max="127"
+                step="0.5"
+                class="input w-24"
+                bind:value={preset.height_cm}
+                aria-label="Height in cm"
+              />
+            </td>
+            <td class="text-right whitespace-nowrap">
+              <button
+                class="btn btn-sm btn-quiet"
+                onclick={() => savePreset(preset.id, preset.name, preset.height_cm)}>Save</button
+              >
+              <button class="btn btn-sm btn-danger" onclick={() => removePreset(preset.id)}
+                >Delete</button
+              >
+            </td>
+          </tr>
+        {:else}
+          <tr><td colspan="3" class="py-4 text-ink-2">No Presets yet.</td></tr>
+        {/each}
+      </tbody>
+    </table>
     <form
-      class="flex flex-wrap gap-2"
-      onsubmit={(event) => {
-        event.preventDefault();
-        void addHoliday();
-      }}
-    >
-      <input type="date" class="rounded border px-2 py-1" required bind:value={holidayDate} />
-      <input
-        class="rounded border px-2 py-1"
-        placeholder="Name"
-        required
-        bind:value={holidayName}
-      />
-      <button class="rounded border px-3 py-1">Add Holiday</button>
-    </form>
-  </div>
-
-  <div class="space-y-2">
-    <h2 class="text-lg font-bold">Presets</h2>
-    {#each presets as preset (preset.id)}
-      <div class="flex flex-wrap gap-2">
-        <input class="rounded border px-2 py-1" bind:value={preset.name} aria-label="Name" />
-        <input
-          type="number"
-          min="62"
-          max="127"
-          step="0.5"
-          class="w-24 rounded border px-2 py-1"
-          bind:value={preset.height_cm}
-          aria-label="Height in cm"
-        />
-        <button
-          class="rounded border px-2 py-1"
-          onclick={() => savePreset(preset.id, preset.name, preset.height_cm)}>Save</button
-        >
-        <button
-          class="rounded border px-2 py-1 text-red-700"
-          onclick={() => removePreset(preset.id)}>Delete</button
-        >
-      </div>
-    {/each}
-    <form
-      class="flex flex-wrap gap-2"
+      class="flex flex-wrap items-end gap-2"
       onsubmit={(event) => {
         event.preventDefault();
         void addPreset();
       }}
     >
-      <input class="rounded border px-2 py-1" placeholder="Name" required bind:value={presetName} />
-      <input
-        type="number"
-        min="62"
-        max="127"
-        step="0.5"
-        class="w-24 rounded border px-2 py-1"
-        required
-        bind:value={presetHeight}
-      />
-      <button class="rounded border px-3 py-1">Add Preset</button>
+      <label class="field grow">
+        Name
+        <input class="input" placeholder="e.g. Standing" required bind:value={presetName} />
+      </label>
+      <label class="field">
+        Height, cm
+        <input
+          type="number"
+          min="62"
+          max="127"
+          step="0.5"
+          class="input w-24"
+          required
+          bind:value={presetHeight}
+        />
+      </label>
+      <button class="btn">Add Preset</button>
     </form>
   </div>
-  {#if error}<p class="text-red-600">{error}</p>{/if}
+
+  <div class="flex flex-col gap-4 border-t border-ink pt-4 lg:col-span-2">
+    <h2>Holidays</h2>
+    <table class="sheet-table">
+      <thead><tr><th>Date</th><th>Name</th><th></th></tr></thead>
+      <tbody>
+        {#each holidays as holiday (holiday.date + holiday.name)}
+          <tr>
+            <td class="font-cond w-32 text-base">{holiday.date}</td>
+            <td>{holiday.name}</td>
+            <td class="text-right">
+              {#if holiday.automatic}
+                <span class="text-sm text-ink-2">automatic</span>
+              {:else}
+                <button class="btn btn-sm btn-danger" onclick={() => removeHoliday(holiday.date)}
+                  >Remove</button
+                >
+              {/if}
+            </td>
+          </tr>
+        {:else}
+          <tr><td colspan="3" class="py-4 text-ink-2">No Holidays.</td></tr>
+        {/each}
+      </tbody>
+    </table>
+    <form
+      class="flex flex-wrap items-end gap-2"
+      onsubmit={(event) => {
+        event.preventDefault();
+        void addHoliday();
+      }}
+    >
+      <label class="field">
+        Date
+        <input type="date" class="input" required bind:value={holidayDate} />
+      </label>
+      <label class="field grow sm:max-w-xs">
+        Name
+        <input class="input" placeholder="e.g. Company day off" required bind:value={holidayName} />
+      </label>
+      <button class="btn">Add Holiday</button>
+    </form>
+  </div>
+  {#if error}<p class="error lg:col-span-2" role="alert">{error}</p>{/if}
 </section>

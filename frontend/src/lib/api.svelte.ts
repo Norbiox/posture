@@ -14,6 +14,23 @@ export interface Preset {
   height_cm: number;
 }
 
+export interface Automation {
+  id: number;
+  kind: "schedule" | "timer";
+  enabled: boolean;
+  preset_id: number;
+  time_of_day: string | null;
+  stance: Stance | null;
+  minutes: number | null;
+}
+
+export interface SettingsData {
+  work_start: string;
+  work_end: string;
+  workdays: number[];
+  threshold_cm: number;
+}
+
 export interface LogLine {
   ts: string;
   level: string;
@@ -108,4 +125,9 @@ export async function loadLogs(): Promise<void> {
 
 export function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+export function formatDuration(seconds: number): string {
+  const minutes = Math.round(seconds / 60);
+  return `${String(Math.floor(minutes / 60))} h ${String(minutes % 60)} min`;
 }

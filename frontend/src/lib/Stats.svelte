@@ -3,7 +3,7 @@
   import "uplot/dist/uPlot.min.css";
   import { onMount } from "svelte";
   import { SvelteDate } from "svelte/reactivity";
-  import { api, errorText } from "./api.svelte";
+  import { api, errorText, formatDuration as format } from "./api.svelte";
 
   interface DayStats {
     date: string;
@@ -28,11 +28,6 @@
 
   const MINUTES_PER_DAY = 1440;
   const stepped = uPlot.paths.stepped;
-
-  function format(seconds: number): string {
-    const minutes = Math.round(seconds / 60);
-    return `${String(Math.floor(minutes / 60))} h ${String(minutes % 60)} min`;
-  }
 
   // Same rule as the backend: a Height at the threshold counts as Standing.
   const totals = $derived.by(() => {
@@ -79,29 +74,42 @@
     return `${String(Math.floor(hours)).padStart(2, "0")}:${hours % 1 === 0 ? "00" : "30"}`;
   }
 
+  const token = (name: string) =>
+    getComputedStyle(document.documentElement).getPropertyValue(`--color-${name}`).trim();
+  const CHART_HEIGHT = 340;
+
   function draw(data: DayStats): void {
     if (!container) return;
     chart?.destroy();
+    const ink = token("ink");
+    const ink2 = token("ink-2");
+    const rule = token("rule");
+    const font = '12px "Barlow", sans-serif';
+    const axis = { stroke: ink2, font, grid: { stroke: rule, width: 1 }, ticks: { stroke: rule } };
     const hours = data.heights.map((_, i) => i / 60);
-    const ticks = Array.from({ length: 49 }, (_, i) => i / 2);
+    const ticks = Array.from({ length: 25 }, (_, i) => i);
     chart = new uPlot(
       {
         width: container.clientWidth,
-        height: 300,
+        height: CHART_HEIGHT,
         legend: { show: false },
         cursor: { drag: { x: true, y: false, setScale: false } },
         scales: { x: { time: false, range: [0, 24] }, y: { range: [60, 130] } },
         axes: [
           {
+            ...axis,
             splits: () => ticks,
-            values: (_u, splits) => splits.map((h) => (h % 1 === 0 ? clock(h) : "")),
+            values: (u, splits) => {
+              const step = u.width < 700 ? 6 : 2;
+              return splits.map((h) => (h % step === 0 ? clock(h) : ""));
+            },
           },
-          { label: "cm" },
+          { ...axis, label: "cm", labelFont: font, size: 44 },
         ],
         series: [
           {},
-          { stroke: "#2563eb", width: 2, ...(stepped ? { paths: stepped({ align: 1 }) } : {}) },
-          { stroke: "#dc2626", width: 1, dash: [6, 6], points: { show: false } },
+          { stroke: ink, width: 1.5, ...(stepped ? { paths: stepped({ align: 1 }) } : {}) },
+          { stroke: ink2, width: 1, dash: [14, 4, 2, 4], points: { show: false } },
         ],
         hooks: {
           setSelect: [
@@ -141,76 +149,113 @@
   onMount(() => {
     void loadDay();
     const onResize = () => {
-      if (container) chart?.setSize({ width: container.clientWidth, height: 300 });
+      if (container) chart?.setSize({ width: container.clientWidth, height: CHART_HEIGHT });
+    };
+    const scheme = matchMedia("(prefers-color-scheme: dark)");
+    const onScheme = () => {
+      if (day) draw(day);
     };
     window.addEventListener("resize", onResize);
+    scheme.addEventListener("change", onScheme);
     return () => {
       window.removeEventListener("resize", onResize);
+      scheme.removeEventListener("change", onScheme);
       chart?.destroy();
     };
   });
 </script>
 
-<section class="space-y-6">
-  <div class="space-y-2">
-    <div class="flex items-center gap-2">
+<section class="flex flex-col gap-10">
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-wrap items-center gap-2">
       <button
-        class="rounded border px-3 py-1"
+        class="btn btn-sm btn-quiet w-9 px-0"
         onclick={() => {
           shift(-1);
         }}
-        aria-label="Previous day">&larr;</button
+        aria-label="Previous day"
       >
-      <span class="font-bold tabular-nums">{day?.date ?? ""}</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"
+          ><path d="M8 1 L3 6 L8 11" fill="none" stroke="currentColor" stroke-width="1.5" /></svg
+        >
+      </button>
+      <span class="font-cond min-w-28 text-center text-xl font-semibold tabular-nums"
+        >{day?.date ?? ""}</span
+      >
       <button
-        class="rounded border px-3 py-1"
+        class="btn btn-sm btn-quiet w-9 px-0"
         onclick={() => {
           shift(1);
         }}
-        aria-label="Next day">&rarr;</button
+        aria-label="Next day"
       >
-      <button class="rounded border px-3 py-1" onclick={() => loadDay()}>Today</button>
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"
+          ><path d="M4 1 L9 6 L4 11" fill="none" stroke="currentColor" stroke-width="1.5" /></svg
+        >
+      </button>
+      <button class="btn btn-sm btn-quiet" onclick={() => loadDay()}>Today</button>
       {#if range}
-        <button class="rounded border px-3 py-1" onclick={resetRange}>Whole day</button>
+        <button class="btn btn-sm" onclick={resetRange}>Whole day</button>
       {/if}
+      <dl class="ml-auto flex gap-6">
+        <div>
+          <dt class="text-sm text-ink-2">Sitting</dt>
+          <dd class="font-cond text-xl font-semibold tabular-nums">{format(totals.sitting)}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-ink-2">Standing</dt>
+          <dd class="font-cond text-xl font-semibold tabular-nums">{format(totals.standing)}</dd>
+        </div>
+      </dl>
     </div>
-    <div class="flex flex-wrap gap-4">
-      <span>Sitting: <b>{format(totals.sitting)}</b></span>
-      <span>Standing: <b>{format(totals.standing)}</b></span>
+    <div bind:this={container} class="w-full border-y border-ink py-3"></div>
+    <p class="text-sm text-ink-2">
       {#if range}
-        <span class="text-gray-500">selected {clock(range[0] / 60)}-{clock(range[1] / 60)}</span>
+        Selected {clock(range[0] / 60)}–{clock(range[1] / 60)}.
+      {:else}
+        Drag across the chart to total a time range.
       {/if}
-    </div>
-    <div bind:this={container} class="w-full"></div>
-    <p class="text-sm text-gray-500">
-      Drag on the chart to total a time range. Dashed line: threshold.
+      Chain line: Stance threshold.
     </p>
   </div>
 
-  <div class="space-y-2">
-    <div class="flex items-center gap-2">
-      <h2 class="text-lg font-bold">Daily totals</h2>
-      <select class="rounded border px-2 py-1" bind:value={span}>
+  <div class="flex flex-col gap-3">
+    <div class="flex flex-wrap items-center gap-4">
+      <h2>Daily totals</h2>
+      <select class="input min-h-8 py-0 text-sm" bind:value={span} aria-label="Range">
         <option value={7}>7 days</option>
         <option value={30}>30 days</option>
       </select>
-      <span class="flex items-center gap-1 text-sm"
-        ><i class="inline-block size-3 bg-blue-300"></i> sitting
-        <i class="inline-block size-3 bg-blue-700"></i> standing</span
-      >
+      <span class="flex items-center gap-3 text-sm text-ink-2">
+        <span class="flex items-center gap-1.5"
+          ><i class="inline-block size-3 border border-ink"></i> Sitting</span
+        >
+        <span class="flex items-center gap-1.5"
+          ><i class="inline-block size-3 bg-ink"></i> Standing</span
+        >
+      </span>
     </div>
-    <div class="flex h-40 items-end gap-1">
+    <div class="flex h-36 items-end gap-1 border-b border-ink">
       {#each daily as d (d.date)}
         <div
           class="flex h-full min-w-0 flex-1 flex-col justify-end"
           title="{d.date}: sitting {format(d.sitting_s)}, standing {format(d.standing_s)}"
         >
-          <div class="bg-blue-700" style="height: {(d.standing_s / maxDaily) * 100}%"></div>
-          <div class="bg-blue-300" style="height: {(d.sitting_s / maxDaily) * 100}%"></div>
-          <span class="truncate text-center text-[10px]">{d.date.slice(5)}</span>
+          <div class="bg-ink" style="height: {(d.standing_s / maxDaily) * 100}%"></div>
+          <div
+            class="border-x border-t border-ink bg-paper-2"
+            style="height: {(d.sitting_s / maxDaily) * 100}%"
+          ></div>
         </div>
       {/each}
     </div>
+    <div class="flex gap-1">
+      {#each daily as d (d.date)}
+        <span class="min-w-0 flex-1 truncate text-center text-[11px] text-ink-2 tabular-nums"
+          >{d.date.slice(5)}</span
+        >
+      {/each}
+    </div>
   </div>
-  {#if error}<p class="text-red-600">{error}</p>{/if}
+  {#if error}<p class="error" role="alert">{error}</p>{/if}
 </section>
