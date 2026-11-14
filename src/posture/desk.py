@@ -112,6 +112,17 @@ class DeskController:
     # Connection
 
     async def run(self) -> None:
+        try:
+            await self._connect_forever()
+        finally:
+            await self._cancel_move()
+            if self._desk:
+                # Time while Posture is not running must not count as the last known Stance.
+                await self._record_event(datetime.now(UTC), None)
+                with contextlib.suppress(Exception):
+                    await self._desk.disconnect()
+
+    async def _connect_forever(self) -> None:
         delay = 1.0
         while True:
             lost = asyncio.Event()
@@ -216,6 +227,8 @@ class DeskController:
         desk = self._require()
         await self._cancel_move()
         await desk.stop()
+        self.moving = False
+        self._on_change("height")
 
     def _human_move_running(self) -> bool:
         return self._source == "human" and self._task is not None and not self._task.done()
