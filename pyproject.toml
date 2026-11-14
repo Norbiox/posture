@@ -3,7 +3,14 @@ name = "posture"
 version = "0.1.0"
 description = "Control an IKEA Idasen desk and track sitting and standing time."
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "apscheduler>=3.11.3",
+    "fastapi>=0.162.7",
+    "holidays>=0.108",
+    "idasen>=0.14.0",
+    "loguru>=0.8.0",
+    "uvicorn[standard]>=0.54.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.13.7,<0.14.0"]
