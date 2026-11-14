@@ -29,7 +29,7 @@
   const D = PX; // px per cm, for readable geometry below
   const hatch = Array.from({ length: 57 }, (_, i) => 24 + i * 10);
 
-  // Push labels of close Presets and the threshold apart; markers stay on their true level.
+  // Push labels of close Presets and the threshold apart; a leader ties each label to its true level.
   const MIN_GAP = 32;
   const labels = $derived.by(() => {
     const rows: { preset: Preset | null; cm: number }[] = presets.map((p) => ({
@@ -71,15 +71,14 @@
 
     <!-- Preset levels -->
     {#each markers as m (m.preset.id)}
-      <line
-        x1="386"
-        x2={W - 8}
-        y1={m.line}
-        y2={m.line}
+      <!-- Leader: true level at the Desk, bent to the label when labels were pushed apart. -->
+      <polyline
+        points="386,{m.line} 398,{m.label} {W - 8},{m.label}"
+        fill="none"
         stroke={m.current ? "var(--color-ink-2)" : "var(--color-rule)"}
       />
       <path
-        d="M398 {m.line} l-6 -9 h12 z"
+        d="M398 {m.label} l-6 -9 h12 z"
         fill={m.current ? "var(--color-ink)" : "var(--color-paper)"}
         stroke="var(--color-ink)"
       />
