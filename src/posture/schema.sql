@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS height_events (
   ts TEXT NOT NULL,
-  height_cm REAL
+  height_cm REAL NOT NULL
 );
 CREATE INDEX IF NOT EXISTS height_events_ts ON height_events (ts);
 

@@ -63,7 +63,7 @@ def _iso(ts: datetime) -> str:
     return ts.astimezone(UTC).isoformat(timespec="milliseconds")
 
 
-def _event(row: tuple[str, float | None]) -> HeightEvent:
+def _event(row: tuple[str, float]) -> HeightEvent:
     return HeightEvent(datetime.fromisoformat(row[0]), row[1])
 
 
@@ -85,7 +85,7 @@ class Db:
 
     # Height events
 
-    def add_event(self, ts: datetime, height_cm: float | None) -> None:
+    def add_event(self, ts: datetime, height_cm: float) -> None:
         with self._conn() as conn:
             conn.execute("INSERT INTO height_events VALUES (?, ?)", (_iso(ts), height_cm))
 
@@ -231,6 +231,15 @@ class Db:
                 conn.execute("DELETE FROM settings WHERE key = 'pause_until'")
             else:
                 self._put(conn, "pause_until", _iso(until))
+
+    def get_last_tick(self) -> datetime | None:
+        with self._conn() as conn:
+            row = conn.execute("SELECT value FROM settings WHERE key = 'last_tick'").fetchone()
+        return datetime.fromisoformat(json.loads(row[0])) if row else None
+
+    def set_last_tick(self, ts: datetime) -> None:
+        with self._conn() as conn:
+            self._put(conn, "last_tick", _iso(ts))
 
     @staticmethod
     def _put(conn: sqlite3.Connection, key: str, value: object) -> None:

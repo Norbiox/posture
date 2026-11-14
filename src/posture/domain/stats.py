@@ -9,8 +9,8 @@ MINUTE = timedelta(minutes=1)
 @dataclass(frozen=True)
 class HeightEvent:
     ts: datetime
-    # None means the Height is unknown until the next event.
-    height_cm: float | None
+    # In force until the next event, also while the Connection is down or Posture is stopped.
+    height_cm: float
 
 
 @dataclass(frozen=True)
@@ -67,11 +67,9 @@ def minute_series(
 
 
 def stance_period(events: list[HeightEvent], threshold_cm: float) -> StancePeriod | None:
-    """Find the current unbroken run in one Stance; unknown Heights break it."""
+    """Find the current Stance period from Height events sorted by time."""
     period = None
     for event in reversed(events):
-        if event.height_cm is None:
-            break
         stance = stance_for(event.height_cm, threshold_cm)
         if period is not None and period.stance is not stance:
             break

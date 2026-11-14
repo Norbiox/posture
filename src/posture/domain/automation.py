@@ -3,6 +3,8 @@ from datetime import UTC, datetime, time, timedelta
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from posture.domain.stance import Stance
     from posture.domain.stats import StancePeriod
     from posture.domain.work_time import WorkHours
@@ -27,6 +29,28 @@ class Timer:
 def schedule_due(schedule: Schedule, now: datetime) -> bool:
     # Minute resolution: the engine ticks once a minute.
     return (now.hour, now.minute) == (schedule.time_of_day.hour, schedule.time_of_day.minute)
+
+
+MISSED_LOOKBACK = timedelta(days=7)
+
+
+def missed_schedules(
+    schedules: list[Schedule],
+    last_tick: datetime,
+    now: datetime,
+    is_active: Callable[[datetime], bool],
+) -> list[tuple[Schedule, datetime]]:
+    """Schedules that were due while Posture was not running, in (last_tick, now)."""
+    # ponytail: minute-by-minute scan, capped at MISSED_LOOKBACK (~10k steps per Schedule)
+    # Scan in now's timezone: Schedules are wall-clock times, last_tick may be stored in UTC.
+    minute = max(last_tick.astimezone(now.tzinfo), now - MISSED_LOOKBACK)
+    minute = minute.replace(second=0, microsecond=0)
+    minute += timedelta(minutes=1)
+    missed: list[tuple[Schedule, datetime]] = []
+    while minute < now:
+        missed += [(s, minute) for s in schedules if schedule_due(s, minute) and is_active(minute)]
+        minute += timedelta(minutes=1)
+    return missed
 
 
 def timer_due(

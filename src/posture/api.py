@@ -77,7 +77,7 @@ class Context:
         self.threshold_cm = 90.0
         self.pause_until: datetime | None = None
 
-    async def _record(self, ts: datetime, height_cm: float | None) -> None:
+    async def _record(self, ts: datetime, height_cm: float) -> None:
         await asyncio.to_thread(self.db.add_event, ts, height_cm)
 
     def _on_change(self, kind: Literal["height", "state"]) -> None:
@@ -489,7 +489,7 @@ def create_app(config: Config) -> FastAPI:
         ctx.pause_until = await asyncio.to_thread(ctx.db.get_pause_until)
         desk_task = asyncio.create_task(ctx.desk.run())
         engine = Engine(config, ctx.db, ctx.desk)
-        engine.start()
+        await engine.start()
         yield
         await engine.stop()
         desk_task.cancel()

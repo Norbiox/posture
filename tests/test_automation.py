@@ -1,8 +1,15 @@
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, datetime, time, timedelta, timezone
 
 import pytest
 
-from posture.domain.automation import Schedule, Timer, schedule_due, should_retry, timer_due
+from posture.domain.automation import (
+    Schedule,
+    Timer,
+    missed_schedules,
+    schedule_due,
+    should_retry,
+    timer_due,
+)
 from posture.domain.stance import Stance
 from posture.domain.stats import StancePeriod
 from posture.domain.work_time import WorkHours
@@ -72,3 +79,28 @@ def test_should_retry(
         retries_done, 5, active=active, stance=stance, first_stance=Stance.SITTING
     )
     assert result is expected
+
+
+def test_missed_schedules() -> None:
+    nine, noon = Schedule(1, time(9, 0)), Schedule(2, time(12, 0))
+    last_tick = datetime(2026, 11, 10, 8, 30, 15, tzinfo=UTC)
+    now = datetime(2026, 11, 11, 10, 0, tzinfo=UTC)
+    missed = missed_schedules([nine, noon], last_tick, now, lambda at: at.day == 10)
+    assert missed == [
+        (nine, datetime(2026, 11, 10, 9, 0, tzinfo=UTC)),
+        (noon, datetime(2026, 11, 10, 12, 0, tzinfo=UTC)),
+    ]
+
+
+def test_missed_schedules_looks_back_at_most_a_week() -> None:
+    now = datetime(2026, 11, 20, 0, 0, tzinfo=UTC)
+    missed = missed_schedules([Schedule(1, time(9, 0))], NOW, now, lambda _: True)
+    assert [due.day for _, due in missed] == [13, 14, 15, 16, 17, 18, 19]
+
+
+def test_missed_schedules_use_the_wall_clock_of_now() -> None:
+    warsaw = timezone(timedelta(hours=1))
+    last_tick = datetime(2026, 11, 10, 7, 0, tzinfo=UTC)  # 08:00 in Warsaw
+    now = datetime(2026, 11, 10, 10, 0, tzinfo=warsaw)
+    missed = missed_schedules([Schedule(1, time(9, 0))], last_tick, now, lambda _: True)
+    assert [due for _, due in missed] == [datetime(2026, 11, 10, 9, 0, tzinfo=warsaw)]

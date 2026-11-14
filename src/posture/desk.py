@@ -92,7 +92,7 @@ class DeskController:
     def __init__(
         self,
         mac: str,
-        record: Callable[[datetime, float | None], Awaitable[None]],
+        record: Callable[[datetime, float], Awaitable[None]],
         on_change: Callable[[Literal["height", "state"]], None],
     ) -> None:
         self.height_cm: float | None = None
@@ -117,8 +117,6 @@ class DeskController:
         finally:
             await self._cancel_move()
             if self._desk:
-                # Time while Posture is not running must not count as the last known Stance.
-                await self._record_event(datetime.now(UTC), None)
                 with contextlib.suppress(Exception):
                     await self._desk.disconnect()
 
@@ -146,7 +144,8 @@ class DeskController:
     async def _connected(self, desk: Desk, height_cm: float) -> None:
         logger.info("Desk connected, Height {} cm", height_cm)
         self._desk, self.connected, self.height_cm = desk, True, height_cm
-        await self._record_event(datetime.now(UTC), height_cm)
+        if height_cm != self._recorded:
+            await self._record_event(datetime.now(UTC), height_cm)
         self._on_change("state")
 
     async def _disconnected(self, desk: Desk) -> None:
@@ -154,13 +153,13 @@ class DeskController:
         if self._rest_timer:
             self._rest_timer.cancel()
         await self._cancel_move()
-        self._desk, self.connected, self.moving, self.height_cm = None, False, False, None
-        await self._record_event(datetime.now(UTC), None)
+        # The last known Height stays in force, so a short drop does not break a Stance period.
+        self._desk, self.connected, self.moving = None, False, False
         self._on_change("state")
         with contextlib.suppress(Exception):
             await desk.disconnect()
 
-    async def _record_event(self, ts: datetime, height_cm: float | None) -> None:
+    async def _record_event(self, ts: datetime, height_cm: float) -> None:
         self._recorded = height_cm
         await self._record(ts, height_cm)
 

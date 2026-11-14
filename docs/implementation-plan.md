@@ -9,7 +9,7 @@ Source of truth for names: [GLOSSARY.md](../GLOSSARY.md). Architecture decision:
 - Persistent BLE connection with automatic reconnect, using the `idasen` library from PyPI (heights in metres there, centimetres everywhere in Posture). Height is what the Desk reports, no correction.
 - Every client (web UI, dmenu script) talks to the Desk only through Posture's HTTP API.
 - Stance (Sitting/Standing) from a threshold set in the UI, default 90 cm. Stance is always derived from stored Heights, so changing the threshold recalculates history.
-- Statistics cover the whole day, every day. Time while Posture is disconnected from the Desk is not counted (assumption, confirm in PR review).
+- Statistics cover the whole day, every day. While the Connection is down or Posture is stopped, the last known Height stays in force, so a short drop does not restart a Timer.
 - Automations (Schedule, Timer) run only inside Work Hours on Workdays that are not Holidays, move the Desk without confirmation, and stop for the day on Pause.
 - Configuration:
   - environment variables: timezone, Desk MAC, retry count, paths, bind address;
@@ -53,16 +53,16 @@ Use `asyncio.to_thread` for sqlite3 calls. All datetimes are timezone-aware (ruf
 
 ## Data model (`schema.sql`)
 
-- `height_events(ts TEXT, height_cm REAL NULL)`: one row per rest Height after each move, plus a row with `NULL` when the connection drops, plus the current Height on every (re)connect. `NULL` means "unknown until next row".
+- `height_events(ts TEXT, height_cm REAL NOT NULL)`: one row per rest Height after each move, plus the current Height on (re)connect when it differs from the last row. Each row is in force until the next one.
 - `presets(id, name UNIQUE, height_cm)`
 - `automations(id, kind CHECK IN ('schedule','timer'), enabled, preset_id, time_of_day NULL, stance NULL, minutes NULL)`
 - `holidays(date PRIMARY KEY, name)`: manual dates. Polish public holidays come from the `holidays` library at read time and are merged in.
-- `settings(key PRIMARY KEY, value TEXT JSON)`: `work_start` (07:00), `work_end` (17:00), `workdays` ([0..4]), `threshold_cm` (90), `pause_until` (null or ISO datetime).
+- `settings(key PRIMARY KEY, value TEXT JSON)`: `work_start` (07:00), `work_end` (17:00), `workdays` ([0..4]), `threshold_cm` (90), `pause_until` (null or ISO datetime), `last_tick` (last engine tick, used to log Schedules missed while Posture was stopped).
 
 ## Domain rules (all unit-tested, 100% branches)
 
 1. **Work time:** `now` is inside `[work_start, work_end)` on a Workday that is not a Holiday.
-2. **Stats:** totals per Stance over `[start, end)` from height events, using the last event before `start` as the initial state. `NULL` stretches are excluded. Per-minute series for the day chart: the Height in force at each minute, `None` when unknown.
+2. **Stats:** totals per Stance over `[start, end)` from height events, using the last event before `start` as the initial state. Time before the first event is excluded. Per-minute series for the day chart: the Height in force at each minute, `None` before the first event and in the future.
 3. **Timer due** when all hold:
    - it is work time and not paused,
    - the Desk is in the Timer's Stance,
