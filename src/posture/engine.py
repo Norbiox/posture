@@ -8,12 +8,21 @@ from loguru import logger
 
 from posture.db import AutomationRow, Db, Settings
 from posture.desk import DeskController, DeskError
-from posture.domain.automation import Schedule, Timer, schedule_due, should_retry, timer_due
+from posture.domain.automation import (
+    Schedule,
+    Timer,
+    missed_schedules,
+    schedule_due,
+    should_retry,
+    timer_due,
+)
 from posture.domain.stance import Stance
 from posture.domain.stats import HeightEvent, StancePeriod, stance_period
 from posture.domain.work_time import is_work_time
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from posture.config import Config
 
 RETRY_DELAY_S = 60
@@ -31,9 +40,29 @@ class Engine:
         self._last_fired: dict[int, datetime] = {}
         self._running: set[asyncio.Task[None]] = set()
 
-    def start(self) -> None:
+    async def start(self) -> None:
+        await self._log_missed()
         self._scheduler.add_job(self._tick, "cron", minute="*", misfire_grace_time=30)
         self._scheduler.start()
+
+    async def _log_missed(self) -> None:
+        # Automations do not catch up after downtime; the log says what was skipped.
+        now = datetime.now(self._config.tz)
+        last_tick = await asyncio.to_thread(self._db.get_last_tick)
+        if last_tick is None:
+            return
+        _, is_active, automations, _ = await asyncio.to_thread(self._read, now)
+        schedules = [
+            Schedule(a.id, time.fromisoformat(a.time_of_day))
+            for a in automations
+            if a.enabled and a.kind == "schedule" and a.time_of_day is not None
+        ]
+        for schedule, due in missed_schedules(schedules, last_tick, now, is_active):
+            logger.warning(
+                "Schedule {} was due at {} but Posture was not running; skipped",
+                schedule.id,
+                due.astimezone(self._config.tz).isoformat(timespec="minutes"),
+            )
 
     async def stop(self) -> None:
         self._scheduler.shutdown(wait=False)
@@ -41,20 +70,26 @@ class Engine:
             task.cancel()
         await asyncio.gather(*self._running, return_exceptions=True)
 
-    def _read(self, now: datetime) -> tuple[Settings, bool, list[AutomationRow], list[HeightEvent]]:
+    def _read(
+        self, now: datetime
+    ) -> tuple[Settings, Callable[[datetime], bool], list[AutomationRow], list[HeightEvent]]:
         settings = self._db.get_settings()
-        holidays = frozenset(h.date for h in self._db.list_holidays([now.year]))
+        holidays = frozenset(h.date for h in self._db.list_holidays([now.year - 1, now.year]))
         pause_until = self._db.get_pause_until()
-        paused = pause_until is not None and now < pause_until
-        active = not paused and is_work_time(
-            now, settings.work_hours(), frozenset(settings.workdays), holidays
-        )
-        return settings, active, self._db.list_automations(), self._db.recent_events(RECENT_EVENTS)
+        work_hours, workdays = settings.work_hours(), frozenset(settings.workdays)
+
+        def is_active(at: datetime) -> bool:
+            paused = pause_until is not None and at < pause_until
+            return not paused and is_work_time(at, work_hours, workdays, holidays)
+
+        automations = self._db.list_automations()
+        return settings, is_active, automations, self._db.recent_events(RECENT_EVENTS)
 
     async def _tick(self) -> None:
         now = datetime.now(self._config.tz)
-        settings, active, automations, events = await asyncio.to_thread(self._read, now)
-        if not active:
+        settings, is_active, automations, events = await asyncio.to_thread(self._read, now)
+        await asyncio.to_thread(self._db.set_last_tick, now)
+        if not is_active(now):
             return
         period = stance_period(events, settings.threshold_cm)
         for automation in automations:
@@ -105,14 +140,12 @@ class Engine:
                 return
             await asyncio.sleep(RETRY_DELAY_S)
             now = datetime.now(self._config.tz)
-            settings, active, _, events = await asyncio.to_thread(self._read, now)
-            # Unknown Heights (a dropped connection) are skipped so a retry can outlive a reconnect.
-            known = [e for e in events if e.height_cm is not None]
-            current = stance_period(known, settings.threshold_cm)
+            settings, is_active, _, events = await asyncio.to_thread(self._read, now)
+            current = stance_period(events, settings.threshold_cm)
             if not should_retry(
                 retries_done + 1,
                 self._config.retries,
-                active=active,
+                active=is_active(now),
                 stance=current.stance if current else None,
                 first_stance=first_stance,
             ):
