@@ -86,7 +86,17 @@
   const togglePause = () => run(() => api(live.paused ? "DELETE" : "POST", "/pause"));
   const saveCurrent = () =>
     run(async () => {
-      await api("POST", "/presets", { name: newName });
+      const existing = presets.find((p) => p.name === newName);
+      const height = live.height_cm;
+      if (existing && height !== null) {
+        const question = `Do you want to update Preset ${existing.name} from ${existing.height_cm.toFixed(1)} to ${height.toFixed(1)}?`;
+        // ponytail: native confirm(); swap for a styled dialog if DESIGN.md asks for one.
+        if (!confirm(question)) return;
+        // Send the Height shown in the question, not whatever the Desk reads a moment later.
+        await api("PUT", `/presets/${String(existing.id)}`, { name: newName, height_cm: height });
+      } else {
+        await api("POST", "/presets", { name: newName });
+      }
       newName = "";
       await loadPresets();
     });
