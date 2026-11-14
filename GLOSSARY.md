@@ -22,6 +22,14 @@ _Avoid_: Position, saved position, favourite
 Whether the Desk is Sitting or Standing, decided by comparing its Height with a single threshold. Every Height belongs to exactly one Stance.
 _Avoid_: Posture, position, mode
 
+**Stance Period**:
+An unbroken stretch of time in which the Desk stays in one Stance. A Height change inside the same Stance does not end it.
+_Avoid_: Session, streak, run
+
+**Connection**:
+The persistent BLE link between Posture and the Desk. While it is down, the last known Height stays in force.
+_Avoid_: Link, pairing, session
+
 ### Time
 
 **Work Hours**:
@@ -47,8 +55,12 @@ An Automation that moves the Desk to a Preset at a fixed time of day.
 _Avoid_: Cron, alarm
 
 **Timer**:
-An Automation that moves the Desk to a Preset after the Desk has stayed in one Stance without a break for a set number of minutes.
+An Automation that moves the Desk to a Preset once the current Stance Period has lasted a set number of minutes.
 _Avoid_: Reminder, countdown, rule
+
+**Log**:
+The record of what Posture did and what went wrong: moves, Automations that ran, were skipped or were missed, and Connection changes.
+_Avoid_: History, journal, events
 
 **Pause**:
 A state in which no Automation moves the Desk until the end of the current day.
