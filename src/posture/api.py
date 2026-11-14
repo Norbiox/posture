@@ -19,6 +19,7 @@ from posture.desk import MAX_CM, MIN_CM, DeskController, DeskError, Direction
 from posture.domain.stance import Stance, stance_for
 from posture.domain.stats import minute_series, stance_totals
 from posture.domain.work_time import day_bounds
+from posture.engine import Engine
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -487,7 +488,10 @@ def create_app(config: Config) -> FastAPI:
         ctx.threshold_cm = settings.threshold_cm
         ctx.pause_until = await asyncio.to_thread(ctx.db.get_pause_until)
         desk_task = asyncio.create_task(ctx.desk.run())
+        engine = Engine(config, ctx.db, ctx.desk)
+        engine.start()
         yield
+        await engine.stop()
         desk_task.cancel()
         await asyncio.wait({desk_task})
 

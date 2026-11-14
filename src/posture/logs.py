@@ -46,8 +46,9 @@ def setup(log_path: Path, publish: Callable[[dict[str, object]], None]) -> None:
         format="{message}",
     )
     logging.basicConfig(handlers=[_InterceptHandler()], level=logging.INFO, force=True)
-    # One access line per request would drown the log and the live Logs tab.
-    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+    # Access lines and scheduler chatter would drown the log and the live Logs tab.
+    for noisy in ("uvicorn.access", "apscheduler"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
 
 
 def tail(log_path: Path, lines: int) -> list[LogLine]:
