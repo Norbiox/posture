@@ -1,9 +1,9 @@
-from enum import Enum, auto
+from enum import StrEnum
 
 
-class Stance(Enum):
-    SITTING = auto()
-    STANDING = auto()
+class Stance(StrEnum):
+    SITTING = "sitting"
+    STANDING = "standing"
 
 
 def stance_for(height_cm: float, threshold_cm: float) -> Stance:
