@@ -28,7 +28,7 @@ class _InterceptHandler(logging.Handler):
         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
-def setup(log_path: Path, publish: Callable[[LogLine], None]) -> None:
+def setup(log_path: Path, publish: Callable[[dict[str, object]], None]) -> None:
     logger.remove()
     logger.add(sys.stderr, level="INFO")
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -36,6 +36,7 @@ def setup(log_path: Path, publish: Callable[[LogLine], None]) -> None:
     logger.add(
         lambda message: publish(
             {
+                "type": "log",
                 "ts": message.record["time"].strftime("%Y-%m-%d %H:%M:%S"),
                 "level": message.record["level"].name,
                 "message": message.record["message"],
@@ -45,6 +46,8 @@ def setup(log_path: Path, publish: Callable[[LogLine], None]) -> None:
         format="{message}",
     )
     logging.basicConfig(handlers=[_InterceptHandler()], level=logging.INFO, force=True)
+    # One access line per request would drown the log and the live Logs tab.
+    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 
 def tail(log_path: Path, lines: int) -> list[LogLine]:
