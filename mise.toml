@@ -1,0 +1,29 @@
+[settings]
+# ponytail: .nvmrc stays the single source of the Node version, CI's setup-node reads it too
+idiomatic_version_file_enable_tools = ["node"]
+
+[tools]
+uv = "0.12.16"
+
+[tasks.setup]
+description = "Install dependencies and git hooks"
+run = [
+  "uv sync",
+  "npm ci --prefix frontend",
+  "uv run pre-commit install",
+]
+
+[tasks.check]
+description = "Run every check the hooks and CI run"
+run = [
+  "uv run pre-commit run --all-files",
+  "uv run pre-commit run --hook-stage pre-push --all-files",
+]
+
+[tasks.test]
+description = "Run backend tests with the domain coverage gate"
+run = "uv run pytest"
+
+[tasks.build]
+description = "Build the frontend into frontend/dist"
+run = "npm --prefix frontend run build"

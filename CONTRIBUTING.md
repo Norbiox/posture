@@ -2,12 +2,11 @@
 
 ## Setup
 
-Requires [uv](https://docs.astral.sh/uv/) and Node 24 (see `.nvmrc`).
+Requires [mise](https://mise.jdx.dev/). It installs uv and Node 24 (version in `.nvmrc`).
 
 ```sh
-uv sync
-npm ci --prefix frontend
-uv run pre-commit install   # installs pre-commit, commit-msg and pre-push hooks
+mise trust && mise install
+mise run setup   # installs dependencies and the pre-commit, commit-msg and pre-push hooks
 ```
 
 ## Checks
@@ -15,10 +14,10 @@ uv run pre-commit install   # installs pre-commit, commit-msg and pre-push hooks
 The hooks run these automatically. To run them by hand:
 
 ```sh
-uv run pre-commit run --all-files                      # fast checks (pre-commit stage)
-uv run pre-commit run --hook-stage pre-push --all-files # tests and svelte-check
-uv run pytest                                          # fails if posture.domain is below 100% branch coverage
-cd frontend && npm run lint && npm run format:check && npm run check && npm run build
+mise run check   # every hook, both stages
+mise run test    # fails if posture.domain is below 100% branch coverage
+mise run build   # frontend into frontend/dist
+mise tasks       # list all tasks
 ```
 
 CI runs the same checks on every push and pull request.
