@@ -135,7 +135,10 @@ class Db:
 
     def list_presets(self) -> list[Preset]:
         with self._conn() as conn:
-            rows = conn.execute("SELECT id, name, height_cm FROM presets ORDER BY height_cm")
+            # Highest first, the way the Desk is pictured; name breaks ties for a stable order.
+            rows = conn.execute(
+                "SELECT id, name, height_cm FROM presets ORDER BY height_cm DESC, name"
+            )
             return [Preset(*row) for row in rows]
 
     def get_preset(self, name: str) -> Preset | None:
