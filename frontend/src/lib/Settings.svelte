@@ -14,6 +14,7 @@
     work_end: "17:00",
     workdays: [],
     threshold_cm: 90,
+    move_retries: 2,
   });
   let holidays = $state<Holiday[]>([]);
   let holidayDate = $state("");
@@ -23,7 +24,7 @@
   let error = $state("");
   // Last server copy: each form saves only its own fields on top of it.
   let stored = $state<SettingsData | null>(null);
-  let saved = $state<"" | "work" | "stance">("");
+  let saved = $state<"" | "work" | "stance" | "moves">("");
 
   async function guard(action: () => Promise<void>): Promise<void> {
     error = "";
@@ -38,7 +39,7 @@
     holidays = await api<Holiday[]>("GET", "/holidays");
   };
 
-  const saveSettings = (part: "work" | "stance", fields: Partial<SettingsData>) =>
+  const saveSettings = (part: "work" | "stance" | "moves", fields: Partial<SettingsData>) =>
     guard(async () => {
       stored = await api<SettingsData>("PUT", "/settings", { ...stored, ...fields });
       settings = { ...settings, ...fields };
@@ -165,6 +166,36 @@
       <div class="flex items-center gap-3">
         <button class="btn btn-solid">Save Stance threshold</button>
         {#if saved === "stance"}<span class="text-sm" role="status">Saved.</span>{/if}
+      </div>
+    </form>
+
+    <form
+      class="flex flex-col gap-4 border-t border-ink pt-4"
+      onsubmit={(event) => {
+        event.preventDefault();
+        void saveSettings("moves", { move_retries: settings.move_retries });
+      }}
+    >
+      <h2>Moves</h2>
+      <label class="field">
+        Retries after an Interruption
+        <input
+          type="number"
+          min="0"
+          max="5"
+          step="1"
+          class="input w-32"
+          required
+          bind:value={settings.move_retries}
+        />
+      </label>
+      <p class="text-sm text-ink-2">
+        When something stops the Desk before it reaches a Preset or Height, Posture resumes the move
+        this many times, then leaves the Desk where it stopped.
+      </p>
+      <div class="flex items-center gap-3">
+        <button class="btn btn-solid">Save Moves</button>
+        {#if saved === "moves"}<span class="text-sm" role="status">Saved.</span>{/if}
       </div>
     </form>
   </div>

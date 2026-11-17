@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Literal
 from idasen import IdasenDesk
 from loguru import logger
 
+from posture.domain.move import interrupted
+
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
@@ -17,6 +19,8 @@ MAX_CM = 127.0
 HOLD_INTERVAL_S = 0.2
 REST_AFTER_S = 1.0  # no notification for this long means the Desk stopped
 BACKOFF_MAX_S = 30.0
+# Lets the Desk finish its anti-collision back-off before the move is resumed.
+RETRY_DELAY_S = 2.0
 
 
 class DeskError(Exception):
@@ -108,6 +112,8 @@ class DeskController:
         self._last_notification = datetime.now(UTC)
         self._recorded: float | None = None
         self._background: set[asyncio.Task[None]] = set()
+        # How many times a move is resumed after an Interruption; set from Settings.
+        self.move_retries = 2
 
     # Connection
 
@@ -203,11 +209,36 @@ class DeskController:
             return False
         await self._cancel_move()
         self._source = source
-        task = self._task = asyncio.create_task(desk.move_to_target(height_cm / 100))
+        task = self._task = asyncio.create_task(self._move(desk, height_cm, self.move_retries))
         await asyncio.wait({task})
         if not task.cancelled() and (error := task.exception()):
             raise DeskError(str(error)) from error
         return True
+
+    async def _move(self, desk: Desk, target_cm: float, retries: int) -> None:
+        # Runs as one task, so Stop, a hold or a newer move also cancels a pending retry.
+        for attempt in range(retries + 1):
+            await desk.move_to_target(target_cm / 100)
+            height_m, _ = await desk.get_height_and_speed()
+            height_cm = round(height_m * 100, 1)
+            if not interrupted(height_cm, target_cm):
+                return
+            if attempt == retries:
+                logger.warning(
+                    "Move to {} cm interrupted at {} cm, leaving the Desk there after {} retries",
+                    target_cm,
+                    height_cm,
+                    retries,
+                )
+                return
+            logger.warning(
+                "Move to {} cm interrupted at {} cm, retry {} of {}",
+                target_cm,
+                height_cm,
+                attempt + 1,
+                retries,
+            )
+            await asyncio.sleep(RETRY_DELAY_S)
 
     async def start_hold(self, direction: Direction) -> None:
         desk = self._require()

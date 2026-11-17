@@ -19,6 +19,7 @@ DEFAULTS = {
     "work_end": "17:00",
     "workdays": [0, 1, 2, 3, 4],
     "threshold_cm": 90.0,
+    "move_retries": 2,
 }
 
 # Heights measured on the owner's Desk.
@@ -64,6 +65,7 @@ class Settings:
     work_end: str
     workdays: list[int]
     threshold_cm: float
+    move_retries: int
 
     def work_hours(self) -> WorkHours:
         return WorkHours(time.fromisoformat(self.work_start), time.fromisoformat(self.work_end))
