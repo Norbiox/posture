@@ -1,0 +1,65 @@
+#!/bin/sh
+# Moves the Desk to a Preset picked in dmenu, or to a Height typed into it (e.g. 105 or 105 cm),
+# through the Posture HTTP API.
+set -eu
+
+url=${POSTURE_URL:-http://posture.lan:8000}
+menu=${POSTURE_MENU:-dmenu -i -l 20}
+
+# Both the menu lines and the reverse lookup use this, so a picked line always maps back.
+labels='def entry: "\(.name)  \(.height_cm * 10 | round / 10) cm";'
+
+notify() {
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send -t 5000 Posture "$1"
+  fi
+}
+
+die() {
+  printf 'menu-idasen: %s\n' "$1" >&2
+  notify "$1"
+  exit 1
+}
+
+# Prints FastAPI's error detail: a string for 404/409/503, a list of validation errors for 422.
+detail() {
+  if [ -z "$1" ]; then
+    printf 'cannot reach Posture at %s' "$url"
+    return
+  fi
+  printf '%s' "$1" |
+    jq -r '.detail | if type == "string" then . else (.[0].msg? // "request failed") end' \
+      2>/dev/null || printf 'request failed'
+}
+
+for tool in curl jq "${menu%% *}"; do
+  command -v "$tool" >/dev/null 2>&1 || die "$tool is not installed"
+done
+
+presets=$(curl -fsS "$url/api/presets") || die "cannot reach Posture at $url"
+entries=$(printf '%s\n' "$presets" | jq -r "$labels .[] | entry") || die "unexpected Preset list"
+
+# shellcheck disable=SC2086 # $menu is a command with arguments, splitting it is intended
+chosen=$(printf '%s\n' "$entries" | $menu -p 'Desk:') || exit 0
+[ -n "$chosen" ] || exit 0
+
+preset=$(printf '%s\n' "$presets" |
+  jq -r --arg chosen "$chosen" "$labels first(.[] | select(entry == \$chosen) | .name) // empty")
+
+if [ -n "$preset" ]; then
+  target=$preset
+  body=$(jq -n --arg preset "$preset" '{$preset}')
+else
+  height=${chosen%cm}
+  height=${height% }
+  case $height in
+    '' | *[!0-9.]* | *.*.* | . | .* | *.) die "unknown Preset or Height: $chosen" ;;
+  esac
+  target="$height cm"
+  body=$(jq -n --arg height "$height" '{height_cm: ($height | tonumber)}')
+fi
+
+notify "Moving the Desk to $target..."
+response=$(curl -sS --fail-with-body -X POST "$url/api/move" \
+  -H 'content-type: application/json' -d "$body") || die "$(detail "$response")"
+notify "Desk at $(printf '%s' "$response" | jq -r '.height_cm * 10 | round / 10') cm"
