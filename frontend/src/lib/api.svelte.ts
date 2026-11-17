@@ -29,6 +29,7 @@ export interface SettingsData {
   work_end: string;
   workdays: number[];
   threshold_cm: number;
+  move_retries: number;
 }
 
 export interface LogLine {

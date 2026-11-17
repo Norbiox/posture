@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
 Height = Annotated[float, Field(ge=MIN_CM, le=MAX_CM)]
 Weekday = Annotated[int, Field(ge=0, le=6)]
+MAX_MOVE_RETRIES = 5
 
 router = APIRouter(prefix="/api")
 
@@ -313,6 +314,7 @@ class SettingsIn(BaseModel):
     work_end: time
     workdays: Annotated[list[Weekday], Field(max_length=7)]
     threshold_cm: Height
+    move_retries: Annotated[int, Field(ge=0, le=MAX_MOVE_RETRIES)]
 
     @model_validator(mode="after")
     def start_before_end(self) -> SettingsIn:
@@ -334,9 +336,11 @@ async def put_settings(body: SettingsIn, ctx: Ctx) -> Settings:
         body.work_end.strftime("%H:%M"),
         sorted(set(body.workdays)),
         body.threshold_cm,
+        body.move_retries,
     )
     await asyncio.to_thread(ctx.db.put_settings, settings)
     ctx.threshold_cm = settings.threshold_cm
+    ctx.desk.move_retries = settings.move_retries
     ctx.broadcast_state()
     return settings
 
@@ -498,6 +502,7 @@ def create_app(config: Config) -> FastAPI:
         logs.setup(config.log_path, ctx.hub.publish)
         settings = await asyncio.to_thread(ctx.db.get_settings)
         ctx.threshold_cm = settings.threshold_cm
+        ctx.desk.move_retries = settings.move_retries
         ctx.pause_until = await asyncio.to_thread(ctx.db.get_pause_until)
         desk_task = asyncio.create_task(ctx.desk.run())
         await ctx.engine.start()

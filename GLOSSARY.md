@@ -26,6 +26,10 @@ _Avoid_: Posture, position, mode
 An unbroken stretch of time in which the Desk stays in one Stance. A Height change inside the same Stance does not end it.
 _Avoid_: Session, streak, run
 
+**Interruption**:
+A move that stops more than 1 cm short of its target Height, for example after the Desk's anti-collision reacts to a knock or pressure. Posture resumes the move up to the configured number of retries.
+_Avoid_: Failure, stall, collision
+
 **Connection**:
 The persistent BLE link between Posture and the Desk. While it is down, the last known Height stays in force.
 _Avoid_: Link, pairing, session

@@ -37,8 +37,8 @@ Environment variables:
 | `POSTURE_STATIC_DIR` | `frontend/dist` | Built web UI served at `/`. |
 | `POSTURE_HOST` / `POSTURE_PORT` | `0.0.0.0` / `8000` | Bind address. |
 
-Work Hours, Workdays, Holidays, the Stance threshold, Presets and Automations are set in the web
-UI and stored in SQLite.
+Work Hours, Workdays, Holidays, the Stance threshold, retries after an Interruption, Presets and
+Automations are set in the web UI and stored in SQLite.
 
 ## Deploy on Alpine Linux
 
