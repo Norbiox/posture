@@ -63,7 +63,7 @@ Stable, used by scripts:
 | Request | Result |
 |---|---|
 | `GET /api/state` | `{height_cm, stance, moving, connected, paused}` |
-| `GET /api/presets` | `[{id, name, height_cm}]` |
+| `GET /api/presets` | `[{id, name, height_cm}]`, highest first |
 | `POST /api/move` `{"preset": "Stand"}` or `{"height_cm": 110}` | State after the Desk arrived |
 | `POST /api/stop` | Stops the Desk |
 | `POST /api/pause`, `DELETE /api/pause` | Pause Automations until the end of today, or resume |
