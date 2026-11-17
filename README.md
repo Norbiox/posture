@@ -54,6 +54,11 @@ sh deploy.sh update    # installs the latest release if it is newer
 Release, pairs the Desk (hold its pairing button when asked) and starts an OpenRC service.
 Settings are in `/etc/conf.d/posture`, logs in `/var/log/posture/posture.log`.
 
+`update` and `install` copy the database to `posture.db.<previous version>.bak` before they replace
+the code and keep the last 5 copies. If an update fails halfway, Posture stays stopped and the next
+`sh deploy.sh update` retries it. Fetch `deploy.sh` again before updating so you run its latest
+version.
+
 Releases are tagged by hand: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 
 ## HTTP API

@@ -9,6 +9,7 @@ LOGS=/var/log/posture
 USER_NAME=posture
 CONF=/etc/conf.d/posture
 INIT=/etc/init.d/posture
+BACKUPS_KEPT=5
 
 usage() {
   echo "Usage: $0 install|update" >&2
@@ -70,19 +71,44 @@ fetch_release() {
     tar -xz -C "$2" --strip-components=1
   curl -fsSL "https://github.com/$REPO/releases/download/$1/posture-frontend-$1.tar.gz" |
     tar -xz -C "$2/frontend/dist"
-  echo "$1" >"$2/VERSION"
+}
+
+# Prints the database path, honouring a POSTURE_DB override in $CONF.
+db_path() {
+  (
+    POSTURE_DB=
+    # shellcheck disable=SC1090 # the file is written by write_conf or by hand
+    [ -e "$CONF" ] && . "$CONF"
+    echo "${POSTURE_DB:-$STATE/posture.db}"
+  )
+}
+
+# Copies the database aside while the service is stopped, labelled with the version it belonged to.
+backup_db() {
+  db=$(db_path)
+  [ -f "$db" ] || return 0
+  label=$(cat "$APP/VERSION" 2>/dev/null || echo unknown)
+  # A fresh mtime, so the pruning below keeps this copy.
+  cp "$db" "$db.$label.bak"
+  echo "Database backed up to $db.$label.bak"
+  # shellcheck disable=SC2012 # backup names are ours and contain no newlines
+  ls -t "$db".*.bak | tail -n +$((BACKUPS_KEPT + 1)) | while read -r old; do rm -f "$old"; done
 }
 
 # Replaces the code in $APP with release $1. The virtualenv stays, uv sync updates it in place.
+# VERSION is written last, so an interrupted run is retried by the next update.
 install_release() {
   tmp=$(mktemp -d)
   fetch_release "$1" "$tmp"
   rc-service posture stop >/dev/null 2>&1 || true
+  backup_db
   rm -rf "$APP/src" "$APP/frontend"
   cp -a "$tmp"/. "$APP"/
   rm -rf "$tmp"
   chown -R "$USER_NAME:$USER_NAME" "$APP"
-  su -s /bin/sh "$USER_NAME" -c "cd $APP && HOME=$STATE uv sync --frozen --no-dev --python 3.14"
+  su -s /bin/sh "$USER_NAME" -c "cd $APP && HOME=$STATE uv sync --frozen --no-dev --python 3.14" ||
+    die "installing $1 failed, Posture is stopped; fix the cause and run: $0 ${CMD:-install} again"
+  echo "$1" >"$APP/VERSION"
 }
 
 write_init_script() {
@@ -170,12 +196,14 @@ cmd_update() {
   fi
   echo "Updating $current -> $tag"
   install_release "$tag"
+  write_init_script
   rc-service posture restart
   echo "Posture $tag is running."
 }
 
 [ $# -eq 1 ] || usage
 
+CMD=$1
 case "$1" in
   install) cmd_install ;;
   update) cmd_update ;;
