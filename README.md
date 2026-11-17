@@ -72,15 +72,23 @@ Heights outside 62-127 cm are rejected with 422. The other endpoints (Presets, A
 settings, Holidays, statistics, logs, `WS /ws`) belong to the web UI and may change; see
 `src/posture/api.py`.
 
-### dmenu example
+### dmenu: `menu-idasen`
+
+[`scripts/menu-idasen`](scripts/menu-idasen) moves the Desk from any Linux desktop with dmenu. It
+lists the Presets with their Heights; pick one, or type a Height such as `105` or `105 cm`. Needs
+`curl`, `jq` and `dmenu`; `notify-send` is used when present.
 
 ```sh
-#!/bin/sh
-url=${POSTURE_URL:-http://posture.lan:8000}
-preset=$(curl -fsS "$url/api/presets" | jq -r '.[].name' | dmenu -p desk) || exit 0
-curl -fsS -X POST "$url/api/move" -H 'content-type: application/json' \
-  -d "$(jq -n --arg preset "$preset" '{$preset}')"
+install -m 755 scripts/menu-idasen ~/.local/bin/
+POSTURE_URL=http://posture.lan:8000 menu-idasen
 ```
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `POSTURE_URL` | `http://posture.lan:8000` | Posture address. |
+| `POSTURE_MENU` | `dmenu -i -l 20` | Menu command, e.g. `rofi -dmenu -i` or `bemenu -i`. |
+
+Bind it to a key in your window manager.
 
 ## Development
 
