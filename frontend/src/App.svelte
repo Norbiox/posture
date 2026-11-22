@@ -36,8 +36,10 @@
           name
             ? 'border-ink text-ink'
             : 'border-transparent text-ink-2 hover:text-ink'}"
-          onclick={() => (tab = name)}>{name}</button
+          onclick={() => (tab = name)}
         >
+          {name}
+        </button>
       {/each}
     </div>
     <p

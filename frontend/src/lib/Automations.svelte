@@ -107,15 +107,17 @@
               class="btn btn-sm btn-quiet"
               onclick={() => {
                 edit(a);
-              }}>Edit</button
+              }}
             >
+              Edit
+            </button>
             <button class="btn btn-sm btn-danger" onclick={() => remove(a)}>Delete</button>
           </td>
         </tr>
       {:else}
-        <tr
-          ><td colspan="4" class="py-4 text-ink-2">No Automations yet. Add the first below.</td></tr
-        >
+        <tr>
+          <td colspan="4" class="py-4 text-ink-2">No Automations yet. Add the first below.</td>
+        </tr>
       {/each}
     </tbody>
   </table>
@@ -179,8 +181,10 @@
           class="btn btn-quiet"
           onclick={() => {
             editing = null;
-          }}>Cancel</button
+          }}
         >
+          Cancel
+        </button>
       {/if}
     </div>
   </form>

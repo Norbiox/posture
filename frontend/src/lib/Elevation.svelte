@@ -149,8 +149,10 @@
     <span
       class="font-cond text-[clamp(2.25rem,7vw,4.25rem)] font-semibold tracking-[-0.01em] tabular-nums transition-colors"
       style="color: {ink}"
-      aria-live="polite">{height === null ? "--.-" : height.toFixed(1)}</span
+      aria-live="polite"
     >
+      {height === null ? "--.-" : height.toFixed(1)}
+    </span>
     <span class="mt-1 text-xs text-ink-2 sm:text-sm">
       {#if !online}last known, cm{:else if moving}cm, moving{:else}cm{/if}
     </span>
@@ -159,8 +161,10 @@
   {#if threshold !== null}
     <span
       class="pointer-events-none absolute -translate-y-full pb-1 text-xs leading-tight whitespace-nowrap text-ink-2 sm:text-sm"
-      style="left: {pctX(16)}; top: {pctY(y(threshold))}">Standing from {threshold.toFixed(1)}</span
+      style="left: {pctX(16)}; top: {pctY(y(threshold))}"
     >
+      Standing from {threshold.toFixed(1)}
+    </span>
   {/if}
 
   {#each markers as m (m.preset.id)}
