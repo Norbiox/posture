@@ -222,11 +222,13 @@
             <td class="text-right whitespace-nowrap">
               <button
                 class="btn btn-sm btn-quiet"
-                onclick={() => savePreset(preset.id, preset.name, preset.height_cm)}>Save</button
+                onclick={() => savePreset(preset.id, preset.name, preset.height_cm)}
               >
-              <button class="btn btn-sm btn-danger" onclick={() => removePreset(preset.id)}
-                >Delete</button
-              >
+                Save
+              </button>
+              <button class="btn btn-sm btn-danger" onclick={() => removePreset(preset.id)}>
+                Delete
+              </button>
             </td>
           </tr>
         {:else}
@@ -274,9 +276,9 @@
               {#if holiday.automatic}
                 <span class="text-sm text-ink-2">automatic</span>
               {:else}
-                <button class="btn btn-sm btn-danger" onclick={() => removeHoliday(holiday.date)}
-                  >Remove</button
-                >
+                <button class="btn btn-sm btn-danger" onclick={() => removeHoliday(holiday.date)}>
+                  Remove
+                </button>
               {/if}
             </td>
           </tr>

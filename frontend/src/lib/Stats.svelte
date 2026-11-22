@@ -175,13 +175,13 @@
         }}
         aria-label="Previous day"
       >
-        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"
-          ><path d="M8 1 L3 6 L8 11" fill="none" stroke="currentColor" stroke-width="1.5" /></svg
-        >
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+          <path d="M8 1 L3 6 L8 11" fill="none" stroke="currentColor" stroke-width="1.5" />
+        </svg>
       </button>
-      <span class="font-cond min-w-28 text-center text-xl font-semibold tabular-nums"
-        >{day?.date ?? ""}</span
-      >
+      <span class="font-cond min-w-28 text-center text-xl font-semibold tabular-nums">
+        {day?.date ?? ""}
+      </span>
       <button
         class="btn btn-sm btn-quiet w-9 px-0"
         onclick={() => {
@@ -189,9 +189,9 @@
         }}
         aria-label="Next day"
       >
-        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"
-          ><path d="M4 1 L9 6 L4 11" fill="none" stroke="currentColor" stroke-width="1.5" /></svg
-        >
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+          <path d="M4 1 L9 6 L4 11" fill="none" stroke="currentColor" stroke-width="1.5" />
+        </svg>
       </button>
       <button class="btn btn-sm btn-quiet" onclick={() => loadDay()}>Today</button>
       {#if range}
@@ -227,12 +227,12 @@
         <option value={30}>30 days</option>
       </select>
       <span class="flex items-center gap-3 text-sm text-ink-2">
-        <span class="flex items-center gap-1.5"
-          ><i class="inline-block size-3 border border-ink"></i> Sitting</span
-        >
-        <span class="flex items-center gap-1.5"
-          ><i class="inline-block size-3 bg-ink"></i> Standing</span
-        >
+        <span class="flex items-center gap-1.5">
+          <i class="inline-block size-3 border border-ink"></i> Sitting
+        </span>
+        <span class="flex items-center gap-1.5">
+          <i class="inline-block size-3 bg-ink"></i> Standing
+        </span>
       </span>
     </div>
     <div class="flex h-36 items-end gap-1 border-b border-ink">
@@ -251,9 +251,9 @@
     </div>
     <div class="flex gap-1">
       {#each daily as d (d.date)}
-        <span class="min-w-0 flex-1 truncate text-center text-[11px] text-ink-2 tabular-nums"
-          >{d.date.slice(5)}</span
-        >
+        <span class="min-w-0 flex-1 truncate text-center text-[11px] text-ink-2 tabular-nums">
+          {d.date.slice(5)}
+        </span>
       {/each}
     </div>
   </div>
