@@ -21,6 +21,8 @@ REST_AFTER_S = 1.0  # no notification for this long means the Desk stopped
 BACKOFF_MAX_S = 30.0
 # Lets the Desk finish its anti-collision back-off before the move is resumed.
 RETRY_DELAY_S = 2.0
+# Longer than REST_AFTER_S, so a Desk that sends no final zero-speed notification still counts.
+SETTLE_TIMEOUT_S = 3.0
 
 
 class DeskError(Exception):
@@ -73,7 +75,7 @@ class FakeDesk:
         await self._step(0.0, 0.0)
 
     async def stop(self) -> None:
-        pass
+        await self._step(0.0, 0.0)
 
 
 type Desk = IdasenDesk | FakeDesk
@@ -112,6 +114,8 @@ class DeskController:
         self._last_notification = datetime.now(UTC)
         self._recorded: float | None = None
         self._background: set[asyncio.Task[None]] = set()
+        self._at_rest_event = asyncio.Event()
+        self._at_rest_event.set()
         # How many times a move is resumed after an Interruption; set from Settings.
         self.move_retries = 2
 
@@ -160,7 +164,8 @@ class DeskController:
             self._rest_timer.cancel()
         await self._cancel_move()
         # The last known Height stays in force, so a short drop does not break a Stance period.
-        self._desk, self.connected, self.moving = None, False, False
+        self._desk, self.connected = None, False
+        self._set_moving(moving=False)
         self._on_change("state")
         with contextlib.suppress(Exception):
             await desk.disconnect()
@@ -173,7 +178,7 @@ class DeskController:
 
     async def _on_notification(self, height_m: float, speed_m_s: float) -> None:
         self.height_cm = round(height_m * 100, 1)
-        self.moving = speed_m_s != 0
+        self._set_moving(moving=speed_m_s != 0)
         self._last_notification = datetime.now(UTC)
         if self._rest_timer:
             self._rest_timer.cancel()
@@ -181,12 +186,30 @@ class DeskController:
         self._on_change("height")
 
     def _at_rest(self) -> None:
-        self.moving = False
+        self._set_moving(moving=False)
         self._on_change("height")
         if self.height_cm is not None and self.height_cm != self._recorded:
             task = asyncio.create_task(self._record_event(self._last_notification, self.height_cm))
             self._background.add(task)
             task.add_done_callback(self._background.discard)
+
+    def _set_moving(self, *, moving: bool) -> None:
+        self.moving = moving
+        if moving:
+            self._at_rest_event.clear()
+        else:
+            self._at_rest_event.set()
+
+    async def _settle(self, desk: Desk) -> None:
+        # A move cancelled mid-way leaves the Desk running and BLE requests in flight; the next
+        # move only takes effect once the Desk has come to rest.
+        await desk.stop()
+        try:
+            await asyncio.wait_for(self._at_rest_event.wait(), SETTLE_TIMEOUT_S)
+        except TimeoutError:
+            logger.warning(
+                "Desk still moving after {:.0f} s, starting the move anyway", SETTLE_TIMEOUT_S
+            )
 
     # Moves
 
@@ -196,18 +219,22 @@ class DeskController:
             raise DeskError(msg)
         return self._desk
 
-    async def _cancel_move(self) -> None:
-        if self._task and not self._task.done():
+    async def _cancel_move(self) -> bool:
+        """Cancel the running move or hold; True when there was one."""
+        running = self._task is not None and not self._task.done()
+        if self._task and running:
             self._task.cancel()
             await asyncio.wait({self._task})
         self._task = None
+        return running
 
     async def move_to(self, height_cm: float, source: Source) -> bool:
         """Move and wait for arrival. False when an Automation yields to a human-started move."""
         desk = self._require()
         if source == "automation" and self._human_move_running():
             return False
-        await self._cancel_move()
+        if await self._cancel_move():
+            await self._settle(desk)
         self._source = source
         task = self._task = asyncio.create_task(self._move(desk, height_cm, self.move_retries))
         await asyncio.wait({task})
@@ -257,7 +284,7 @@ class DeskController:
         desk = self._require()
         await self._cancel_move()
         await desk.stop()
-        self.moving = False
+        self._set_moving(moving=False)
         self._on_change("height")
 
     def _human_move_running(self) -> bool:
